@@ -22,25 +22,14 @@ output "ssh_key_secrets" {
   }
 }
 
-output "server_install_tasks" {
-  description = "Map of server installation task IDs"
+output "servers" {
+  description = "Map of OVH dedicated servers"
   value = {
-    for k, v in ovh_dedicated_server_install_task.server_install :
+    for k, v in ovh_dedicated_server.server :
     k => {
       id           = v.id
       service_name = v.service_name
-      status       = try(v.status, null)
-    }
-  }
-}
-
-output "server_updates" {
-  description = "Map of server update configurations"
-  value = {
-    for k, v in ovh_dedicated_server_update.server_update :
-    k => {
-      id           = v.id
-      service_name = v.service_name
+      display_name = v.display_name
       boot_id      = v.boot_id
       monitoring   = v.monitoring
       state        = v.state

@@ -1,3 +1,53 @@
+# GCP Configuration Variables
+variable "gcp_project_name" {
+  description = "GCP project name for Secret Manager"
+  type        = string
+}
+
+variable "gcp_region" {
+  description = "GCP region"
+  type        = string
+}
+
+variable "gcp_zone" {
+  description = "GCP zone"
+  type        = string
+}
+
+variable "gcp_audience" {
+  description = "GCP Workload Identity audience"
+  type        = string
+  sensitive   = true
+}
+
+variable "gcp_service_account_email" {
+  description = "GCP service account email"
+  type        = string
+  sensitive   = true
+}
+
+variable "gcp_identity_token" {
+  description = "GCP identity token for authentication"
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
+
+variable "ovh_credentials_secret_names" {
+  description = "Names of GCP secrets containing OVH API credentials"
+  type = object({
+    application_key    = string
+    application_secret = string
+    consumer_key       = string
+  })
+  default = {
+    application_key    = "ovh-application-key"
+    application_secret = "ovh-application-secret"
+    consumer_key       = "ovh-consumer-key"
+  }
+}
+
+# Server Configuration Variables
 variable "dedicated_servers" {
   description = "Map of OVH dedicated server configurations"
   type = map(object({
@@ -38,6 +88,12 @@ variable "secret_prefix" {
   description = "Prefix for secret names in GCP Secret Manager"
   type        = string
   default     = "ovh-server"
+}
+
+variable "secret_replication_automatic" {
+  description = "Whether to use automatic replication for secrets (true) or user-managed replication (false)"
+  type        = bool
+  default     = true
 }
 
 variable "secret_replication_locations" {
