@@ -32,14 +32,23 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id = "1147291"
-          region = "eu-west-lim"
-          datacenter = "lim1"
+          server_id         = "1147291"
+          region            = "eu-west-lim"
+          datacenter        = "lim1"
           availability_zone = "eu-west-lim-a"
-          model = "SYS-1-Intel_Xeon-E_2136"
-          os = "ubuntu2510-server_64"
-          ip = "135.125.223.211"
+          model             = "SYS-1-Intel_Xeon-E_2136"
+          os                = "ubuntu2510-server_64"
+          ip                = "135.125.223.211"
         }
+        plan = {
+          plan_code = "dedicated-ssd-1"
+        }
+        plan_option = [
+          {
+            plan_code = "backup-100"
+            quantity  = 1
+          }
+        ]
       }
       "server-1147293" = {
         service_name = "ns3156292.ip-135-125-223.eu"
@@ -47,14 +56,23 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id = "1147293"
-          region = "eu-west-lim"
-          datacenter = "lim1"
+          server_id         = "1147293"
+          region            = "eu-west-lim"
+          datacenter        = "lim1"
           availability_zone = "eu-west-lim-a"
-          model = "SYS-1-Intel_Xeon-E_2136"
-          os = "ubuntu2510-server_64"
-          ip = "135.125.223.213"
+          model             = "SYS-1-Intel_Xeon-E_2136"
+          os                = "ubuntu2510-server_64"
+          ip                = "135.125.223.213"
         }
+        plan = {
+          plan_code = "dedicated-ssd-1"
+        }
+        plan_option = [
+          {
+            plan_code = "backup-100"
+            quantity  = 1
+          }
+        ]
       }
       "server-1417389" = {
         service_name = "ns324588.ip-37-187-157.eu"
@@ -62,14 +80,23 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id = "1417389"
-          region = "eu-west-gra"
-          datacenter = "gra1"
+          server_id         = "1417389"
+          region            = "eu-west-gra"
+          datacenter        = "gra1"
           availability_zone = "eu-west-gra-a"
-          model = "KS-LE-2"
-          os = "ubuntu2510-server_64"
-          ip = "37.187.157.64"
+          model             = "KS-LE-2"
+          os                = "ubuntu2510-server_64"
+          ip                = "37.187.157.64"
         }
+        plan = {
+          plan_code = "dedicated-ssd-1"
+        }
+        plan_option = [
+          {
+            plan_code = "backup-100"
+            quantity  = 1
+          }
+        ]
       }
       "server-1859010" = {
         service_name = "ns331578.ip-37-187-159.eu"
@@ -77,14 +104,23 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id = "1859010"
-          region = "eu-west-gra"
-          datacenter = "gra1"
+          server_id         = "1859010"
+          region            = "eu-west-gra"
+          datacenter        = "gra1"
           availability_zone = "eu-west-gra-a"
-          model = "RISE-S-AMD_Ryzen_7_9700X"
-          os = "ubuntu2510-server_64"
-          ip = "37.187.159.125"
+          model             = "RISE-S-AMD_Ryzen_7_9700X"
+          os                = "ubuntu2510-server_64"
+          ip                = "37.187.159.125"
         }
+        plan = {
+          plan_code = "dedicated-ssd-1"
+        }
+        plan_option = [
+          {
+            plan_code = "backup-100"
+            quantity  = 1
+          }
+        ]
       }
       "server-1432449" = {
         service_name = "ns338656.ip-5-196-78.eu"
@@ -92,14 +128,23 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id = "1432449"
-          region = "eu-west-gra"
-          datacenter = "gra1"
+          server_id         = "1432449"
+          region            = "eu-west-gra"
+          datacenter        = "gra1"
           availability_zone = "eu-west-gra-a"
-          model = "KS-LE-2"
-          os = "ubuntu2510-server_64"
-          ip = "5.196.78.186"
+          model             = "KS-LE-2"
+          os                = "ubuntu2510-server_64"
+          ip                = "5.196.78.186"
         }
+        plan = {
+          plan_code = "dedicated-ssd-1"
+        }
+        plan_option = [
+          {
+            plan_code = "backup-100"
+            quantity  = 1
+          }
+        ]
       }
     }
 

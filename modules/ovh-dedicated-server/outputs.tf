@@ -10,18 +10,6 @@ output "server_info_secrets" {
   }
 }
 
-output "ssh_key_secrets" {
-  description = "Map of SSH key secrets in GCP Secret Manager"
-  value = {
-    for k, v in google_secret_manager_secret.ssh_keys :
-    k => {
-      secret_id = v.secret_id
-      name      = v.name
-      id        = v.id
-    }
-  }
-}
-
 output "servers" {
   description = "Map of OVH dedicated servers"
   value = {
