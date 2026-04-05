@@ -116,18 +116,24 @@ variable "notification_topic_prefix" {
 variable "ovh_endpoint" {
   description = "OVH API endpoint"
   type        = string
-  default     = "ovh-ca"
 }
 
-variable "ovh_client_id" {
-  description = "OVH API client ID"
+variable "ovh_application_key" {
+  description = "OVH API application key"
   type        = string
   sensitive   = true
   ephemeral   = true
 }
 
-variable "ovh_client_secret" {
-  description = "OVH API client secret"
+variable "ovh_application_secret" {
+  description = "OVH API application secret"
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
+
+variable "ovh_consumer_key" {
+  description = "OVH API consumer key"
   type        = string
   sensitive   = true
   ephemeral   = true

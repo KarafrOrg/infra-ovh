@@ -1,17 +1,15 @@
 data "ovh_me" "account" {}
 
-# Main OVH dedicated server resource
 resource "ovh_dedicated_server" "server" {
-  for_each = var.dedicated_servers
-
-  service_name = each.value.service_name
-  display_name = try(each.value.display_name, each.value.service_name)
-  boot_id      = try(each.value.boot_id, null)
-  monitoring   = try(each.value.monitoring, true)
-  state        = try(each.value.state, "ok")
-
-  # Prevent automatic OS installation when importing existing servers
+  for_each                  = var.dedicated_servers
+  ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
+  service_name              = each.value.service_name
+  display_name              = try(each.value.display_name, each.value.service_name)
+  boot_id                   = try(each.value.boot_id, null)
+  monitoring                = try(each.value.monitoring, true)
+  state                     = try(each.value.state, "ok")
   prevent_install_on_import = true
+  prevent_install_on_create = false
   plan = [
     {
       plan_code     = each.value.plan.plan_code
@@ -30,8 +28,6 @@ resource "ovh_dedicated_server" "server" {
   ]
 }
 
-
-# GCP Secret Manager: Store server information
 resource "google_secret_manager_secret" "server_info" {
   for_each = var.dedicated_servers
 
@@ -66,7 +62,6 @@ resource "google_secret_manager_secret" "server_info" {
   }
 }
 
-# GCP Secret Manager: Store server information version with actual data
 resource "google_secret_manager_secret_version" "server_info" {
   for_each = var.dedicated_servers
 
@@ -82,7 +77,6 @@ resource "google_secret_manager_secret_version" "server_info" {
   })
 }
 
-# GCP Pub/Sub: Topics for server notifications
 resource "google_pubsub_topic" "server_notifications" {
   for_each = { for k, v in var.dedicated_servers : k => v if try(v.enable_notifications, false) }
 

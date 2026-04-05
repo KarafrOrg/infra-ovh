@@ -20,9 +20,10 @@ deployment "ovh-production" {
     gcp_region = "europe-central2"
 
     # OVH configuration
-    ovh_endpoint  = "ovh-eu"
-    ovh_client_id = store.varset.credentials.ovh_client_id
-    ovh_client_secret = store.varset.credentials.ovh_client_secret
+    ovh_endpoint = "ovh-ca"
+    ovh_application_key    = store.varset.credentials.ovh_application_key
+    ovh_application_secret = store.varset.credentials.ovh_application_secret
+    ovh_consumer_key       = store.varset.credentials.ovh_consumer_key
 
     # Dedicated servers configuration
     dedicated_servers = {

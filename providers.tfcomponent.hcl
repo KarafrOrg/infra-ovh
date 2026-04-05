@@ -24,8 +24,9 @@ provider "google" "main" {
 
 provider "ovh" "main" {
   config {
-    endpoint      = var.ovh_endpoint
-    client_id     = var.ovh_client_id
-    client_secret = var.ovh_client_secret
+    endpoint     = var.ovh_endpoint
+    application_key    = var.ovh_application_key
+    application_secret = var.ovh_application_secret
+    consumer_key       = var.ovh_consumer_key
   }
 }
