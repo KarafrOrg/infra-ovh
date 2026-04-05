@@ -1,0 +1,73 @@
+variable "dedicated_servers" {
+  description = "Map of OVH dedicated server configurations"
+  type = map(object({
+    service_name = string
+    display_name = optional(string)
+    boot_id = optional(number)
+    monitoring = optional(bool, true)
+    state = optional(string, "ok")
+    install_template = optional(string)
+    install_details = optional(object({
+      custom_hostname = optional(string)
+      disk_group_id = optional(number)
+      no_raid = optional(bool)
+      post_installation_script_link = optional(string)
+      post_installation_script_return = optional(string)
+      soft_raid_devices = optional(number)
+      ssh_key_name = optional(string)
+      use_distrib_kernel = optional(bool)
+      use_spla = optional(bool)
+    }))
+    enable_notifications = optional(bool, false)
+    labels = optional(map(string), {})
+  }))
+  default = {}
+}
+
+variable "ssh_keys" {
+  description = "Map of SSH keys to store in Secret Manager"
+  type = map(object({
+    public_key = string
+    labels = optional(map(string), {})
+  }))
+  default = {}
+  sensitive = true
+}
+
+variable "secret_prefix" {
+  description = "Prefix for secret names in GCP Secret Manager"
+  type        = string
+  default     = "ovh-server"
+}
+
+variable "secret_replication_locations" {
+  description = "List of GCP regions for secret replication when using user-managed replication"
+  type = list(string)
+  default = ["europe-west1", "europe-west3"]
+}
+
+variable "notification_topic_prefix" {
+  description = "Prefix for Pub/Sub topic names for server notifications"
+  type        = string
+  default     = "ovh-server-monitoring"
+}
+
+variable "ovh_endpoint" {
+  description = "OVH API endpoint"
+  type        = string
+  default     = "ovh-ca"
+}
+
+variable "ovh_client_id" {
+  description = "OVH API client ID"
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
+
+variable "ovh_client_secret" {
+  description = "OVH API client secret"
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+}
