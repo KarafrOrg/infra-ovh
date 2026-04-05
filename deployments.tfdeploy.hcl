@@ -26,6 +26,7 @@ deployment "ovh-production" {
 
     # Dedicated servers configuration
     dedicated_servers = {}
+
     # Secret Manager configuration
     secret_prefix                = "ovh-server"
     secret_replication_automatic = true
