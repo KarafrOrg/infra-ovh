@@ -12,12 +12,22 @@ resource "ovh_dedicated_server" "server" {
 
   # Prevent automatic OS installation when importing existing servers
   prevent_install_on_import = true
-  plan {
-    plan_code     = each.value.plan.plan_code
-    pricing_mode  = try(each.value.plan.pricing_mode, "default")
-    duration      = try(each.value.plan.duration, "P1M")
-    configuration = { for config in each.value.configuration : config.label => config.value }
-  }
+  plan = [
+    {
+      plan_code     = each.value.plan.plan_code
+      pricing_mode  = try(each.value.plan.pricing_mode, "default")
+      duration      = try(each.value.plan.duration, "P1M")
+      configuration = { for config in each.value.configuration : config.label => config.value }
+    }
+  ]
+  plan_option = [
+    for option in each.value.plan_option : {
+      plan_code    = option.plan_code
+      pricing_mode = try(option.pricing_mode, "default")
+      duration     = try(option.duration, "P1M")
+      quantity     = try(option.quantity, 1)
+    }
+  ]
 }
 
 
@@ -63,12 +73,12 @@ resource "google_secret_manager_secret_version" "server_info" {
   secret = google_secret_manager_secret.server_info[each.key].id
 
   secret_data = jsonencode({
-    service_name  = each.value.service_name
-    display_name  = try(each.value.display_name, each.value.service_name)
-    monitoring    = try(each.value.monitoring, true)
-    state         = try(each.value.state, "ok")
-    labels        = try(each.value.labels, {})
-    last_updated  = timestamp()
+    service_name = each.value.service_name
+    display_name = try(each.value.display_name, each.value.service_name)
+    monitoring   = try(each.value.monitoring, true)
+    state        = try(each.value.state, "ok")
+    labels       = try(each.value.labels, {})
+    last_updated = timestamp()
   })
 }
 
