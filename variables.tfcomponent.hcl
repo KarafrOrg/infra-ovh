@@ -24,6 +24,7 @@ variable "gcp_service_account_email" {
   description = "GCP service account email"
   type        = string
   sensitive   = true
+  ephemeral   = true
 }
 
 variable "gcp_identity_token" {
