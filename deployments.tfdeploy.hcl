@@ -20,10 +20,10 @@ deployment "ovh-production" {
     gcp_region = "europe-central2"
 
     # OVH configuration
-    ovh_endpoint = "ovh-ca"
+    ovh_endpoint           = "ovh-ca"
     ovh_application_key    = store.varset.credentials.ovh_application_key
     ovh_application_secret = store.varset.credentials.ovh_application_secret
-    ovh_consumer_key       = store.varset.credentials.ovh_consumer_key
+    ovh_consumer_key = store.varset.credentials.ovh_consumer_key
 
     # Dedicated servers configuration
     dedicated_servers = {
@@ -50,6 +50,20 @@ deployment "ovh-production" {
             quantity  = 1
           }
         ]
+        configuration = [
+          {
+            label = "CPU"
+            value = "6"
+          },
+          {
+            label = "RAM"
+            value = "32GB"
+          },
+          {
+            label = "Storage"
+            value = "2x480GB SSD"
+          }
+        ]
       }
       "server-1147293" = {
         service_name = "ns3156292.ip-135-125-223.eu"
@@ -72,6 +86,20 @@ deployment "ovh-production" {
           {
             plan_code = "backup-100"
             quantity  = 1
+          }
+        ]
+        configuration = [
+          {
+            label = "CPU"
+            value = "6"
+          },
+          {
+            label = "RAM"
+            value = "32GB"
+          },
+          {
+            label = "Storage"
+            value = "2x480GB SSD"
           }
         ]
       }
@@ -98,6 +126,20 @@ deployment "ovh-production" {
             quantity  = 1
           }
         ]
+        configuration = [
+          {
+            label = "CPU"
+            value = "6"
+          },
+          {
+            label = "RAM"
+            value = "32GB"
+          },
+          {
+            label = "Storage"
+            value = "2x480GB SSD"
+          }
+        ]
       }
       "server-1859010" = {
         service_name = "ns331578.ip-37-187-159.eu"
@@ -122,6 +164,20 @@ deployment "ovh-production" {
             quantity  = 1
           }
         ]
+        configuration = [
+          {
+            label = "CPU"
+            value = "6"
+          },
+          {
+            label = "RAM"
+            value = "32GB"
+          },
+          {
+            label = "Storage"
+            value = "2x480GB SSD"
+          }
+        ]
       }
       "server-1432449" = {
         service_name = "ns338656.ip-5-196-78.eu"
@@ -144,6 +200,20 @@ deployment "ovh-production" {
           {
             plan_code = "backup-100"
             quantity  = 1
+          }
+        ]
+        configuration = [
+          {
+            label = "CPU"
+            value = "6"
+          },
+          {
+            label = "RAM"
+            value = "32GB"
+          },
+          {
+            label = "Storage"
+            value = "2x480GB SSD"
           }
         ]
       }
