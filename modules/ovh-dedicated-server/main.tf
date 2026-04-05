@@ -15,7 +15,12 @@ resource "ovh_dedicated_server" "server" {
       plan_code     = each.value.plan.plan_code
       pricing_mode  = try(each.value.plan.pricing_mode, "default")
       duration      = try(each.value.plan.duration, "P1M")
-      configuration = { for config in each.value.configuration : config.label => config.value }
+      configuration = [
+        for config in each.value.configuration : {
+          label = config.label
+          value = config.value
+        }
+      ]
     }
   ]
   plan_option = [
