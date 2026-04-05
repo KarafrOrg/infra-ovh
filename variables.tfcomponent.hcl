@@ -56,21 +56,6 @@ variable "dedicated_servers" {
     boot_id = optional(number)
     monitoring = optional(bool, true)
     state = optional(string, "ok")
-    plan = object({
-      pricing_mode = optional(string, "default")
-      duration     = optional(string, "P1M")
-      plan_code    = string
-    })
-    plan_option = list(object({
-      duration     = optional(string, "P1M")
-      plan_code    = string
-      pricing_mode = optional(string, "default")
-      quantity     = optional(number, 1)
-    }))
-    configuration = list(object({
-      label = string
-      value = string
-    }))
     install_template = optional(string)
     install_details = optional(object({
       custom_hostname = optional(string)

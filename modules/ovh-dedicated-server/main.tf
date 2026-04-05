@@ -82,49 +82,6 @@ resource "google_secret_manager_secret_version" "server_info" {
   })
 }
 
-# GCP Secret Manager: Store SSH keys
-resource "google_secret_manager_secret" "ssh_keys" {
-  for_each = var.ssh_keys
-
-  secret_id = "${var.secret_prefix}-ssh-${each.key}"
-  project   = var.gcp_project_name
-
-  labels = merge(
-    try(each.value.labels, {}),
-    {
-      managed_by = "terraform"
-      key_name   = each.key
-    }
-  )
-
-  replication {
-    dynamic "auto" {
-      for_each = var.secret_replication_automatic ? [1] : []
-      content {}
-    }
-
-    dynamic "user_managed" {
-      for_each = var.secret_replication_automatic ? [] : [1]
-      content {
-        dynamic "replicas" {
-          for_each = var.secret_replication_locations
-          content {
-            location = replicas.value
-          }
-        }
-      }
-    }
-  }
-}
-
-# GCP Secret Manager: Store SSH key versions
-resource "google_secret_manager_secret_version" "ssh_keys" {
-  for_each = var.ssh_keys
-
-  secret      = google_secret_manager_secret.ssh_keys[each.key].id
-  secret_data = each.value.public_key
-}
-
 # GCP Pub/Sub: Topics for server notifications
 resource "google_pubsub_topic" "server_notifications" {
   for_each = { for k, v in var.dedicated_servers : k => v if try(v.enable_notifications, false) }

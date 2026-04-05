@@ -26,6 +26,8 @@ variable "dedicated_servers" {
       label = string
       value = string
     }))
+    enable_notifications = optional(bool, false)
+    labels               = optional(map(string), {})
   }))
   default = {}
 }
