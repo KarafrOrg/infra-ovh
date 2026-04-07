@@ -85,7 +85,7 @@ deployment "ovh-production" {
         labels = {
           os = "ubuntu2510-server_64"
         }
-        plan = {},
+        plan = null
         plan_option = []
         configuration = []
       }
