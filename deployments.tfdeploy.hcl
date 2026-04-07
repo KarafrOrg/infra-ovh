@@ -33,16 +33,14 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          os        = "ubuntu2510-server_64"
-          ip        = "135-125-223-217"
+          os = "ubuntu2510-server_64"
+          ip = "135-125-223-217"
         }
-        plan = [
-          {
-            pricing_mode = "default"
-            duration     = "P1M"
-            plan_code    = "26skle01-v1"
-          },
-        ]
+        plan = {
+          pricing_mode = "default"
+          duration     = "P1M"
+          plan_code    = "26skle01-v1"
+        },
         plan_option = [
           {
             pricing_mode = "default"
