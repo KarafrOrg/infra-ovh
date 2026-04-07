@@ -7,7 +7,7 @@ resource "ovh_dedicated_server" "server" {
   boot_id                   = try(each.value.boot_id, null)
   monitoring                = try(each.value.monitoring, true)
   state                     = try(each.value.state, "ok")
-  commercial_range          = try(each.value.commercial_range, "eco")
+  range                     = try(each.value.commercial_range, "eco")
   prevent_install_on_import = true
   prevent_install_on_create = false
   plan = [

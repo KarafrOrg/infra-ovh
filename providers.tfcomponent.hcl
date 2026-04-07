@@ -1,7 +1,7 @@
 required_providers {
   ovh = {
     source  = "ovh/ovh"
-    version = "2.8.0"
+    version = "2.12.0"
   }
   google = {
     source  = "hashicorp/google"
