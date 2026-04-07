@@ -77,15 +77,14 @@ resource "google_secret_manager_secret" "server_info" {
 resource "google_secret_manager_secret_version" "server_info" {
   for_each = var.dedicated_servers
 
-  secret = google_secret_manager_secret.server_info[each.key].id
+  secret                = google_secret_manager_secret.server_info[each.key].id
+  is_secret_data_base64 = false
 
   secret_data = jsonencode({
     service_name = each.value.service_name
-    display_name = try(each.value.display_name, each.value.service_name)
     monitoring   = try(each.value.monitoring, true)
     state        = try(each.value.state, "ok")
     labels       = try(each.value.labels, {})
-    last_updated = timestamp()
   })
 }
 
