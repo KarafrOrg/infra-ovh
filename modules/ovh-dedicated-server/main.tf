@@ -8,7 +8,6 @@ resource "ovh_dedicated_server" "server" {
   state                     = try(each.value.state, "ok")
   range                     = try(each.value.commercial_range, "eco")
   os                        = local.operating_system
-  properties                = {}
   prevent_install_on_import = false
   prevent_install_on_create = false
   plan = [
