@@ -93,7 +93,7 @@ resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
   customizations {
     ssh_key                  = data.google_secret_manager_secret_version.ssh_key[each.key].secret_data
     hostname                 = "${each.key}.karafra.net"
-    post_installation_script = base64encode(templatefile("${path.module}/tempaltes/post-install.sh.tftpl", {}))
+    post_installation_script = base64encode(templatefile("${path.module}/templates/post-install.sh.tftpl", {}))
   }
 }
 
