@@ -1,3 +1,3 @@
 locals {
-  operating_system = "ubuntu2510-server_64"
+  operating_system = "ubuntu2404-server_64"
 }
