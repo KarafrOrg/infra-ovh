@@ -75,7 +75,7 @@ resource "google_secret_manager_secret" "server_info" {
 }
 
 data "ovh_dedicated_installation_template" "template" {
-  template_name = "ubuntu2510-server_64"
+  template_name = local.operating_system
 }
 
 data "google_secret_manager_secret_version" "ssh_key" {
