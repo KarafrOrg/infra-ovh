@@ -77,6 +77,17 @@ deployment "ovh-production" {
             value = "none_64.en",
           },
         ]
+      },
+      "k8s-node2" = {
+        monitoring     = true
+        state          = "ok"
+        ssh_key_secret = "ovh-vps-ssh-public-key"
+        labels = {
+          os = "ubuntu2510-server_64"
+        }
+        plan = {},
+        plan_option = []
+        configuration = []
       }
     }
 

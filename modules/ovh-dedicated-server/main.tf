@@ -74,6 +74,7 @@ resource "google_secret_manager_secret" "server_info" {
   }
 }
 
+/*
 data "ovh_dedicated_installation_template" "template" {
   template_name = local.operating_system
 }
@@ -96,6 +97,7 @@ resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
     post_installation_script = base64encode(templatefile("${path.module}/templates/post-install.sh.tftpl", {}))
   }
 }
+*/
 
 resource "google_secret_manager_secret_version" "server_info" {
   for_each = var.dedicated_servers
