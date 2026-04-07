@@ -12,9 +12,9 @@ resource "ovh_dedicated_server" "server" {
   prevent_install_on_create = false
   plan = [
     {
-      plan_code     = each.value.plan.plan_code
-      pricing_mode  = try(each.value.plan.pricing_mode, "default")
-      duration      = try(each.value.plan.duration, "P1M")
+      plan_code    = each.value.plan.plan_code
+      pricing_mode = try(each.value.plan.pricing_mode, "default")
+      duration     = try(each.value.plan.duration, "P1M")
       configuration = [
         for config in each.value.configuration : {
           label = config.label

@@ -27,9 +27,9 @@ deployment "ovh-production" {
 
     # Dedicated servers configuration
     dedicated_servers = {
-      "server-1147291" = {
+      "k8s-node1" = {
         service_name = "ns3156252.ip-135-125-223.eu"
-        display_name = "ns3156252.ip-135-125-223.eu (SYS-1 | Intel Xeon-E 2136)"
+        display_name = "k8s node-1"
         monitoring   = true
         state        = "ok"
         labels = {
@@ -39,32 +39,54 @@ deployment "ovh-production" {
           availability_zone = "eu-west-lim-a"
           model             = "SYS-1-Intel_Xeon-E_2136"
           os                = "ubuntu2510-server_64"
-          ip                = "135.125.223.211"
+          ip                = "135-125-223-217"
         }
-        plan = {
-          plan_code = "dedicated-ssd-1"
-        }
-        plan_option = [
-          {
-            plan_code = "backup-100"
-            quantity  = 1
-          }
-        ]
-        configuration = [
-          {
-            label = "CPU"
-            value = "6"
-          },
-          {
-            label = "RAM"
-            value = "32GB"
-          },
-          {
-            label = "Storage"
-            value = "2x480GB SSD"
-          }
-        ]
       }
+      plan = [
+        {
+          pricing_mode = "default"
+          duration     = "P1M"
+          plan_code    = "26skle01-v1"
+        },
+      ]
+      plan_option = [
+        {
+          pricing_mode = "default"
+          duration     = "P1M"
+          plan_code    = "softraid-3x2000sa-26skle01-v1"
+          quantity     = 1,
+        },
+        {
+          pricing_mode = "default"
+          duration     = "P1M"
+          plan_code    = "ram-32g-noecc-1333-26skle01-v1"
+          quantity     = 1,
+        },
+        {
+          pricing_mode = "default"
+          duration     = "P1M"
+          plan_code    = "bandwidth-1000-ks-gen0"
+          quantity     = 1,
+        },
+      ],
+      configuration = [
+        {
+          label = "METADATA_ESTIMATED_DELIVERY_TIME",
+          value = "1H-high",
+        },
+        {
+          label = "dedicated_datacenter",
+          value = "bhs",
+        },
+        {
+          label = "region",
+          value = "canada",
+        },
+        {
+          label = "dedicated_os",
+          value = "none_64.en",
+        },
+      ]
     }
 
     # Secret Manager configuration
