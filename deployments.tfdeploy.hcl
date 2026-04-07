@@ -28,8 +28,9 @@ deployment "ovh-production" {
     # Dedicated servers configuration
     dedicated_servers = {
       "k8s-node1" = {
-        monitoring   = true
-        state        = "ok"
+        monitoring     = true
+        state          = "ok"
+        ssh_key_secret = "ovh-vps-ssh-public-key"
         labels = {
           os = "ubuntu2510-server_64"
         }

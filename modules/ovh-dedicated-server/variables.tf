@@ -10,6 +10,8 @@ variable "dedicated_servers" {
     boot_id          = optional(number)
     monitoring       = optional(bool, true)
     state            = optional(string, "ok")
+    service_name     = optional(string)
+    ssh_key_secret   = optional(string)
     plan = object({
       pricing_mode = optional(string, "default")
       duration     = optional(string, "P1M")

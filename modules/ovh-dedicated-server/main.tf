@@ -74,6 +74,29 @@ resource "google_secret_manager_secret" "server_info" {
   }
 }
 
+data "ovh_dedicated_installation_template" "template" {
+  template_name = "ubuntu2510-server_64"
+}
+
+data "google_secret_manager_secret_version" "ssh_key" {
+  for_each = var.dedicated_servers
+
+  project = var.gcp_project_name
+  secret  = try(each.value.ssh_key_secret, "${var.secret_prefix}-${each.key}-ssh-key")
+}
+
+resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
+  for_each = var.dedicated_servers
+
+  service_name = ovh_dedicated_server.server[each.key].service_name
+  os           = data.ovh_dedicated_installation_template.template.template_name
+  customizations {
+    ssh_key                  = data.google_secret_manager_secret_version.ssh_key[each.key].secret_data
+    hostname                 = "${each.key}.karafra.net"
+    post_installation_script = base64encode(templatefile("${path.module}/tempaltes/post-install.sh.tftpl", {}))
+  }
+}
+
 resource "google_secret_manager_secret_version" "server_info" {
   for_each = var.dedicated_servers
 

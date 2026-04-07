@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+apt-get update -y
+apt-get upgrade -y
+
+echo "Installing Python 3 and pip..."
+apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv \
+    python3-dev
+
+echo "Installing build essentials..."
+apt-get install -y \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-setuptools
+
+echo "Installing additional useful packages..."
+apt-get install -y \
+    git \
+    curl \
+    wget \
+    openssh-server \
+    sudo \
+    vim \
+    ca-certificates \
+    gnupg \
+    lsb-release
+
+systemctl enable ssh
+systemctl start ssh
+
+sed -i 's/#PermitRootLogin.*/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin yes/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+sed -i 's/#PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sed -i 's/#PubkeyAuthentication.*/PubkeyAuthentication yes/' /etc/ssh/sshd_config
+
+systemctl restart ssh
+
+pip3 install --upgrade pip
+pip3 install --upgrade setuptools wheel
+
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.31/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.31/deb/ /' | tee /etc/apt/sources.list.d/kubernetes.list
+apt-get update -y
+apt-get install -y kubectl
+
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+curl -sS https://webi.sh/k9s | sh
+mv ~/.local/bin/k9s /usr/local/bin/k9s
+
+apt-get autoremove -y
+apt-get autoclean -y
+
+echo "Python: $(python3 --version)"
+echo "Pip: $(pip3 --version)"
+echo "SSH: $(ssh -V 2>&1)"
+echo "kubectl: $(kubectl version --client --short 2>&1 || echo 'installed')"
+echo "Helm: $(helm version --short 2>&1 || echo 'installed')"
+echo "k9s: $(k9s version --short 2>&1 || echo 'installed')"

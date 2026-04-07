@@ -57,6 +57,8 @@ variable "dedicated_servers" {
     state = optional(string, "ok")
     commercial_range = optional(string, "eco")
     install_template = optional(string)
+    service_name = optional(string)
+    ssh_key_secret = optional(string)
     plan = object({
       pricing_mode = optional(string, "default")
       duration = optional(string, "P1M")
