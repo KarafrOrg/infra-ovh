@@ -22,7 +22,7 @@ resource "ovh_dedicated_server" "server" {
         }
       ]
     }
-  ] : []
+  ] : null
   plan_option = [
     for option in try(each.value.plan_option, []) : {
       plan_code    = option.plan_code
