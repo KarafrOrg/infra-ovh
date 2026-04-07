@@ -28,7 +28,7 @@ deployment "ovh-production" {
     # Dedicated servers configuration
     dedicated_servers = {
       "k8s-node1" = {
-        service_name = "ns3156252.ip-135-125-223.eu"
+        service_name = "ns338656.ip-5-196-78.eu"
         display_name = "k8s node-1"
         monitoring   = true
         state        = "ok"
