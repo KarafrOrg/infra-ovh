@@ -33,8 +33,6 @@ resource "ovh_dedicated_server" "server" {
   ]
   lifecycle {
     ignore_changes = [
-      iam,
-      id,
       os,
       root_device,
       display_name
