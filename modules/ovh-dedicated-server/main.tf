@@ -1,5 +1,7 @@
 data "ovh_me" "account" {}
 
+resource "" "" {}
+
 resource "ovh_dedicated_server" "server" {
   for_each                  = var.dedicated_servers
   ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
@@ -7,7 +9,9 @@ resource "ovh_dedicated_server" "server" {
   monitoring                = try(each.value.monitoring, true)
   state                     = try(each.value.state, "ok")
   range                     = try(each.value.commercial_range, "eco")
-  prevent_install_on_import = true
+  os                        = local.operating_system
+  properties                = {}
+  prevent_install_on_import = false
   prevent_install_on_create = false
   plan = [
     {
