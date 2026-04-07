@@ -6,11 +6,12 @@ variable "gcp_project_name" {
 variable "dedicated_servers" {
   description = "Map of dedicated server configurations"
   type = map(object({
-    service_name = string
-    display_name = optional(string)
-    boot_id      = optional(number)
-    monitoring   = optional(bool, true)
-    state        = optional(string, "ok")
+    service_name     = string
+    commercial_range = optional(string, "eco")
+    display_name     = optional(string)
+    boot_id          = optional(number)
+    monitoring       = optional(bool, true)
+    state            = optional(string, "ok")
     plan = object({
       pricing_mode = optional(string, "default")
       duration     = optional(string, "P1M")

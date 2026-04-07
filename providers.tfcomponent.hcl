@@ -1,11 +1,11 @@
 required_providers {
   ovh = {
     source  = "ovh/ovh"
-    version = "~> 2.12"
+    version = "2.8.0"
   }
   google = {
     source  = "hashicorp/google"
-    version = "~> 7.24"
+    version = "7.26.0"
   }
 }
 
@@ -24,7 +24,7 @@ provider "google" "main" {
 
 provider "ovh" "main" {
   config {
-    endpoint     = var.ovh_endpoint
+    endpoint           = var.ovh_endpoint
     application_key    = var.ovh_application_key
     application_secret = var.ovh_application_secret
     consumer_key       = var.ovh_consumer_key

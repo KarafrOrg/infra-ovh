@@ -57,6 +57,7 @@ variable "dedicated_servers" {
     boot_id = optional(number)
     monitoring = optional(bool, true)
     state = optional(string, "ok")
+    commercial_range = optional(string, "eco")
     install_template = optional(string)
     plan = object({
       pricing_mode = optional(string, "default")

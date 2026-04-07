@@ -34,7 +34,6 @@ deployment "ovh-production" {
         state        = "ok"
         labels = {
           os = "ubuntu2510-server_64"
-          ip = "135-125-223-217"
         }
         plan = {
           pricing_mode = "default"
