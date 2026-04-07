@@ -31,6 +31,15 @@ resource "ovh_dedicated_server" "server" {
       quantity     = try(option.quantity, 1)
     }
   ]
+  lifecycle {
+    ignore_changes = [
+      iam,
+      id,
+      os,
+      root_device,
+      display_name
+    ]
+  }
 }
 
 resource "google_secret_manager_secret" "server_info" {
