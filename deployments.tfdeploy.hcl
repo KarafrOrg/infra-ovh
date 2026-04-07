@@ -33,60 +33,55 @@ deployment "ovh-production" {
         monitoring   = true
         state        = "ok"
         labels = {
-          server_id         = "1147291"
-          region            = "eu-west-lim"
-          datacenter        = "lim1"
-          availability_zone = "eu-west-lim-a"
-          model             = "SYS-1-Intel_Xeon-E_2136"
-          os                = "ubuntu2510-server_64"
-          ip                = "135-125-223-217"
+          os        = "ubuntu2510-server_64"
+          ip        = "135-125-223-217"
         }
+        plan = [
+          {
+            pricing_mode = "default"
+            duration     = "P1M"
+            plan_code    = "26skle01-v1"
+          },
+        ]
+        plan_option = [
+          {
+            pricing_mode = "default"
+            duration     = "P1M"
+            plan_code    = "softraid-3x2000sa-26skle01-v1"
+            quantity     = 1,
+          },
+          {
+            pricing_mode = "default"
+            duration     = "P1M"
+            plan_code    = "ram-32g-noecc-1333-26skle01-v1"
+            quantity     = 1,
+          },
+          {
+            pricing_mode = "default"
+            duration     = "P1M"
+            plan_code    = "bandwidth-1000-ks-gen0"
+            quantity     = 1,
+          },
+        ]
+        configuration = [
+          {
+            label = "METADATA_ESTIMATED_DELIVERY_TIME",
+            value = "1H-high",
+          },
+          {
+            label = "dedicated_datacenter",
+            value = "bhs",
+          },
+          {
+            label = "region",
+            value = "canada",
+          },
+          {
+            label = "dedicated_os",
+            value = "none_64.en",
+          },
+        ]
       }
-      plan = [
-        {
-          pricing_mode = "default"
-          duration     = "P1M"
-          plan_code    = "26skle01-v1"
-        },
-      ]
-      plan_option = [
-        {
-          pricing_mode = "default"
-          duration     = "P1M"
-          plan_code    = "softraid-3x2000sa-26skle01-v1"
-          quantity     = 1,
-        },
-        {
-          pricing_mode = "default"
-          duration     = "P1M"
-          plan_code    = "ram-32g-noecc-1333-26skle01-v1"
-          quantity     = 1,
-        },
-        {
-          pricing_mode = "default"
-          duration     = "P1M"
-          plan_code    = "bandwidth-1000-ks-gen0"
-          quantity     = 1,
-        },
-      ],
-      configuration = [
-        {
-          label = "METADATA_ESTIMATED_DELIVERY_TIME",
-          value = "1H-high",
-        },
-        {
-          label = "dedicated_datacenter",
-          value = "bhs",
-        },
-        {
-          label = "region",
-          value = "canada",
-        },
-        {
-          label = "dedicated_os",
-          value = "none_64.en",
-        },
-      ]
     }
 
     # Secret Manager configuration
