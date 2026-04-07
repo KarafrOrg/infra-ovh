@@ -1,7 +1,5 @@
 data "ovh_me" "account" {}
 
-resource "" "" {}
-
 resource "ovh_dedicated_server" "server" {
   for_each                  = var.dedicated_servers
   ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
