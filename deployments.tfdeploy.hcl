@@ -78,17 +78,6 @@ deployment "ovh-production" {
           },
         ]
       },
-      "k8s-node2" = {
-        monitoring     = true
-        state          = "ok"
-        ssh_key_secret = "ovh-vps-ssh-public-key"
-        labels = {
-          os = "ubuntu2510-server_64"
-        }
-        plan = null
-        plan_option = []
-        configuration = []
-      }
     }
 
     # Secret Manager configuration
