@@ -10,13 +10,11 @@ resource "ovh_dedicated_server" "server" {
   os                        = local.operating_system
   prevent_install_on_import = false
   prevent_install_on_create = false
-
-  dynamic "plan" {
-    for_each = each.value.plan != null ? [each.value.plan] : []
-    content {
-      plan_code    = plan.value["plan_code"]
-      pricing_mode = try(plan.value["pricing_mode"], "default")
-      duration     = try(plan.value["duration"], "P1M")
+  plan = each.value.plan != null ? [
+    {
+      plan_code    = each.value.plan.plan_code
+      pricing_mode = try(each.value.plan.pricing_mode, "default")
+      duration     = try(each.value.plan.duration, "P1M")
       configuration = [
         for config in try(each.value.configuration, []) : {
           label = config.label
@@ -24,18 +22,15 @@ resource "ovh_dedicated_server" "server" {
         }
       ]
     }
-  }
-
-  dynamic "plan_option" {
-    for_each = try(each.value.plan_option, [])
-    content {
-      plan_code    = plan_option.value.plan_code
-      pricing_mode = try(plan_option.value.pricing_mode, "default")
-      duration     = try(plan_option.value.duration, "P1M")
-      quantity     = try(plan_option.value.quantity, 1)
+  ] : []
+  plan_option = [
+    for option in try(each.value.plan_option, []) : {
+      plan_code    = option.plan_code
+      pricing_mode = try(option.pricing_mode, "default")
+      duration     = try(option.duration, "P1M")
+      quantity     = try(option.quantity, 1)
     }
-  }
-
+  ]
   lifecycle {
     ignore_changes = [
       os,
