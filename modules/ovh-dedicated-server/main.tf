@@ -4,7 +4,6 @@ resource "ovh_dedicated_server" "server" {
   for_each                  = var.dedicated_servers
   service_name              = each.value.service_name
   ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
-  display_name              = try(each.value.display_name, each.value.service_name)
   boot_id                   = try(each.value.boot_id, null)
   monitoring                = try(each.value.monitoring, true)
   state                     = try(each.value.state, "ok")
