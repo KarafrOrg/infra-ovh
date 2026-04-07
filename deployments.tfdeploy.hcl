@@ -85,11 +85,7 @@ deployment "ovh-production" {
         labels = {
           os = "ubuntu2510-server_64"
         }
-        plan = {
-          pricing_mode = "default"
-          duration     = "P1M"
-          plan_code    = "24sys012"
-        },
+        plan = {},
         plan_option = []
         configuration = []
       }

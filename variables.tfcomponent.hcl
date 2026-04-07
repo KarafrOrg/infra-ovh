@@ -58,22 +58,23 @@ variable "dedicated_servers" {
     commercial_range = optional(string, "eco")
     install_template = optional(string)
     service_name = optional(string)
+    reinstall = optional(bool, false)
     ssh_key_secret = optional(string)
-    plan = object({
+    plan = optional(object({
       pricing_mode = optional(string, "default")
       duration = optional(string, "P1M")
       plan_code = string
-    })
-    plan_option = list(object({
+    }))
+    plan_option = optional(list(object({
       duration = optional(string, "P1M")
       plan_code = string
       pricing_mode = optional(string, "default")
       quantity = optional(number, 1)
-    }))
-    configuration = list(object({
+    })), [])
+    configuration = optional(list(object({
       label = string
       value = string
-    }))
+    })), [])
     enable_notifications = optional(bool, false)
     labels = optional(map(string), {})
   }))
