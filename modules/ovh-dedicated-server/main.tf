@@ -2,7 +2,6 @@ data "ovh_me" "account" {}
 
 resource "ovh_dedicated_server" "server" {
   for_each                  = var.dedicated_servers
-  service_name              = each.value.service_name
   ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
   boot_id                   = try(each.value.boot_id, null)
   monitoring                = try(each.value.monitoring, true)
@@ -81,9 +80,9 @@ resource "google_secret_manager_secret_version" "server_info" {
   is_secret_data_base64 = false
 
   secret_data = jsonencode({
-    service_name = each.value.service_name
-    monitoring   = try(each.value.monitoring, true)
-    state        = try(each.value.state, "ok")
+    service_name = ovh_dedicated_server.server[each.key].service_name
+    monitoring   = ovh_dedicated_server.server[each.key].monitoring
+    state        = ovh_dedicated_server.server[each.key].state
     labels       = try(each.value.labels, {})
   })
 }

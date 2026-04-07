@@ -52,8 +52,6 @@ variable "ovh_credentials_secret_names" {
 variable "dedicated_servers" {
   description = "Map of OVH dedicated server configurations"
   type = map(object({
-    service_name = string
-    display_name = optional(string)
     boot_id = optional(number)
     monitoring = optional(bool, true)
     state = optional(string, "ok")
