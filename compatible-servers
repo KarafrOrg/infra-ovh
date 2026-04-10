@@ -1,0 +1,32 @@
+{
+  "ovh": [
+    "alma10_64",
+    "alma8-cpanel-latest_64",
+    "alma8-plesk18_64",
+    "alma8_64",
+    "alma9-cpanel-latest_64",
+    "alma9-plesk18_64",
+    "alma9_64",
+    "byoi_64",
+    "byolinux_64",
+    "debian11_64",
+    "debian12-plesk18_64",
+    "debian12_64",
+    "debian13_64",
+    "fedora42_64",
+    "fedora43_64",
+    "proxmox-bs3_64",
+    "proxmox-bs4_64",
+    "proxmox8_64",
+    "proxmox9_64",
+    "rocky10_64",
+    "rocky8_64",
+    "rocky9_64",
+    "sles-sap15sp4_64",
+    "ubuntu2204-server_64",
+    "ubuntu2404-server_64",
+    "ubuntu2510-server_64",
+    "win2016-hyperv_64",
+    "win2019-hyperv_64"
+  ]
+}
