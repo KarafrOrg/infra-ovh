@@ -3,18 +3,6 @@ ovh_endpoint           = "ovh-ca"
 
 # Dedicated servers configuration
 dedicated_servers = {
-  "proxmox-master" = {
-    existing_server = true
-    monitoring      = true
-    state           = "ok"
-    ssh_key_secret  = "ovh-vps-ssh-public-key"
-    labels = {
-      service_name     = "ns338656-ip-5-196-78-eu"
-      ip               = "5-196-78-186"
-      commercial_range = "ks-le-2"
-      datacenter       = "eu-west-gra"
-    }
-  },
   "proxmox-node1" = {
     existing_server = true
     monitoring      = true
