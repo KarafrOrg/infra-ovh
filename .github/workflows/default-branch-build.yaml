@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   apply-terraform-plan:
-    uses: ./.github/workflows/apply.yaml
+    uses: KarafrOrg/actions-terraform-core/.github/workflows/apply.yaml@v0.1.0
     name: Apply Terraform plan
     with:
       environment: karafra-net

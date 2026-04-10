@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   create-terraform-plan:
-    uses: ./.github/workflows/plan.yaml
+    uses: KarafrOrg/actions-terraform-core/.github/workflows/plan.yaml@v0.1.0
     name: Create Terraform plan
     with:
       environment: karafra-net
