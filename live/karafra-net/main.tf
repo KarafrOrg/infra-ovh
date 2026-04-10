@@ -11,30 +11,3 @@ module "infra_ovh" {
   secret_replication_locations = var.secret_replication_locations
   ssh_keys                     = var.ssh_keys
 }
-
-import {
-  id = "ns338656.ip-5-196-78.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-master"]
-}
-
-import {
-  id = "ns510634.ip-198-27-70.net"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node1"]
-}
-
-
-import {
-  id = "ns3156292.ip-135-125-223.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node3"]
-}
-
-import {
-  id = "ns324588.ip-37-187-157.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node4"]
-}
-
-import {
-  id = "ns331578.ip-37-187-159.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node5"]
-}
-
