@@ -96,6 +96,11 @@ resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
     hostname                 = "${each.key}.karafra.net"
     post_installation_script = base64encode(templatefile("${path.module}/templates/post-install.sh.tftpl", {}))
   }
+  lifecycle {
+    replace_triggered_by = [
+      ovh_dedicated_server.server[each.key].os
+    ]
+  }
 }
 
 
