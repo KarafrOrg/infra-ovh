@@ -1,3 +1,3 @@
 locals {
-  operating_system = "ubuntu2404-server_64"
+  operating_system = "proxmox9_64"
 }
