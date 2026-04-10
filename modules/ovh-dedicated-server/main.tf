@@ -2,15 +2,15 @@ data "ovh_me" "account" {}
 
 resource "ovh_dedicated_server" "server" {
   for_each                  = var.dedicated_servers
-  ovh_subsidiary            = data.ovh_me.account.ovh_subsidiary
+  ovh_subsidiary            = each.value.existing_server ? null : data.ovh_me.account.ovh_subsidiary
   boot_id                   = try(each.value.boot_id, null)
   monitoring                = try(each.value.monitoring, true)
   state                     = try(each.value.state, "ok")
   range                     = try(each.value.commercial_range, "eco")
   os                        = local.operating_system
-  prevent_install_on_import = false
+  prevent_install_on_import = true
   prevent_install_on_create = false
-  plan = each.value.plan != null ? [
+  plan = each.value.existing_server || each.value.plan == null ? null : [
     {
       plan_code    = each.value.plan.plan_code
       pricing_mode = try(each.value.plan.pricing_mode, "default")
@@ -22,8 +22,8 @@ resource "ovh_dedicated_server" "server" {
         }
       ]
     }
-  ] : null
-  plan_option = [
+  ]
+  plan_option = each.value.existing_server ? [] : [
     for option in try(each.value.plan_option, []) : {
       plan_code    = option.plan_code
       pricing_mode = try(option.pricing_mode, "default")
@@ -35,7 +35,11 @@ resource "ovh_dedicated_server" "server" {
     ignore_changes = [
       os,
       root_device,
-      display_name
+      display_name,
+      ovh_subsidiary,
+      plan,
+      plan_option,
+      boot_id,
     ]
   }
 }
@@ -44,7 +48,6 @@ resource "google_secret_manager_secret" "server_info" {
   for_each = var.dedicated_servers
 
   secret_id = "${var.secret_prefix}-${each.key}-info"
-  project   = var.gcp_project_name
 
   labels = merge(
     try(each.value.labels, {}),
@@ -74,16 +77,13 @@ resource "google_secret_manager_secret" "server_info" {
   }
 }
 
-/*
 data "ovh_dedicated_installation_template" "template" {
   template_name = local.operating_system
 }
 
 data "google_secret_manager_secret_version" "ssh_key" {
   for_each = var.dedicated_servers
-
-  project = var.gcp_project_name
-  secret  = try(each.value.ssh_key_secret, "${var.secret_prefix}-${each.key}-ssh-key")
+  secret   = try(each.value.ssh_key_secret, "${var.secret_prefix}-${each.key}-ssh-key")
 }
 
 resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
@@ -97,7 +97,7 @@ resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
     post_installation_script = base64encode(templatefile("${path.module}/templates/post-install.sh.tftpl", {}))
   }
 }
-*/
+
 
 resource "google_secret_manager_secret_version" "server_info" {
   for_each = var.dedicated_servers
@@ -116,8 +116,7 @@ resource "google_secret_manager_secret_version" "server_info" {
 resource "google_pubsub_topic" "server_notifications" {
   for_each = { for k, v in var.dedicated_servers : k => v if try(v.enable_notifications, false) }
 
-  name    = "${var.notification_topic_prefix}-${each.key}"
-  project = var.gcp_project_name
+  name = "${var.notification_topic_prefix}-${each.key}"
 
   labels = merge(
     try(each.value.labels, {}),

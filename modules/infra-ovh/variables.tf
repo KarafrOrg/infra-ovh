@@ -1,39 +1,3 @@
-# GCP Configuration Variables
-variable "gcp_project_name" {
-  description = "GCP project name for Secret Manager"
-  type        = string
-}
-
-variable "gcp_region" {
-  description = "GCP region"
-  type        = string
-}
-
-variable "gcp_zone" {
-  description = "GCP zone"
-  type        = string
-}
-
-variable "gcp_audience" {
-  description = "GCP Workload Identity audience"
-  type        = string
-  sensitive   = true
-}
-
-variable "gcp_service_account_email" {
-  description = "GCP service account email"
-  type        = string
-  sensitive   = true
-  ephemeral   = true
-}
-
-variable "gcp_identity_token" {
-  description = "GCP identity token for authentication"
-  type        = string
-  sensitive   = true
-  ephemeral   = true
-}
-
 variable "ovh_credentials_secret_names" {
   description = "Names of GCP secrets containing OVH API credentials"
   type = object({
@@ -52,31 +16,31 @@ variable "ovh_credentials_secret_names" {
 variable "dedicated_servers" {
   description = "Map of OVH dedicated server configurations"
   type = map(object({
-    boot_id = optional(number)
-    monitoring = optional(bool, true)
-    state = optional(string, "ok")
+    boot_id          = optional(number)
+    monitoring       = optional(bool, true)
+    state            = optional(string, "ok")
     commercial_range = optional(string, "eco")
     install_template = optional(string)
-    service_name = optional(string)
-    reinstall = optional(bool, false)
-    ssh_key_secret = optional(string)
+    service_name     = optional(string)
+    reinstall        = optional(bool, false)
+    ssh_key_secret   = optional(string)
     plan = optional(object({
       pricing_mode = optional(string, "default")
-      duration = optional(string, "P1M")
-      plan_code = string
+      duration     = optional(string, "P1M")
+      plan_code    = string
     }))
     plan_option = optional(list(object({
-      duration = optional(string, "P1M")
-      plan_code = string
+      duration     = optional(string, "P1M")
+      plan_code    = string
       pricing_mode = optional(string, "default")
-      quantity = optional(number, 1)
+      quantity     = optional(number, 1)
     })), [])
     configuration = optional(list(object({
       label = string
       value = string
     })), [])
     enable_notifications = optional(bool, false)
-    labels = optional(map(string), {})
+    labels               = optional(map(string), {})
   }))
   default = {}
 }
@@ -85,9 +49,9 @@ variable "ssh_keys" {
   description = "Map of SSH keys to store in Secret Manager"
   type = map(object({
     public_key = string
-    labels = optional(map(string), {})
+    labels     = optional(map(string), {})
   }))
-  default = {}
+  default   = {}
   sensitive = true
 }
 
@@ -105,8 +69,8 @@ variable "secret_replication_automatic" {
 
 variable "secret_replication_locations" {
   description = "List of GCP regions for secret replication when using user-managed replication"
-  type = list(string)
-  default = ["europe-west1", "europe-west3"]
+  type        = list(string)
+  default     = ["europe-west1", "europe-west3"]
 }
 
 variable "notification_topic_prefix" {
