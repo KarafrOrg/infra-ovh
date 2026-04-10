@@ -111,6 +111,7 @@ resource "google_secret_manager_secret_version" "server_info" {
 
   secret                = google_secret_manager_secret.server_info[each.key].id
   is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
 
   secret_data = jsonencode({
     service_name = ovh_dedicated_server.server[each.key].service_name
