@@ -13,16 +13,32 @@ module "infra_ovh" {
 }
 
 import {
-  id = "projects/karafra-net/secrets/ovh-server-k8s-node1-info"
-  to = module.infra_ovh.module.ovh_dedicated_server.google_secret_manager_secret.server_info["k8s-node1"]
-}
-
-import {
   id = "ns338656.ip-5-196-78.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["k8s-node1"]
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-master"]
 }
 
 import {
-  id = "projects/1019265211616/secrets/ovh-server-k8s-node1-info/versions/7"
-  to = module.infra_ovh.module.ovh_dedicated_server.google_secret_manager_secret_version.server_info["k8s-node1"]
+  id = "ns510634.ip-198-27-70.net"
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node1"]
 }
+
+import {
+  id = "ns3156252.ip-135-125-223.eu"
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node2"]
+}
+
+import {
+  id = "ns3156292.ip-135-125-223.eu"
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node3"]
+}
+
+import {
+  id = "ns324588.ip-37-187-157.eu"
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node4"]
+}
+
+import {
+  id = "ns331578.ip-37-187-159.eu"
+  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node5"]
+}
+
