@@ -22,10 +22,6 @@ import {
   to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node1"]
 }
 
-import {
-  id = "ns3156252.ip-135-125-223.eu"
-  to = module.infra_ovh.module.ovh_dedicated_server.ovh_dedicated_server.server["proxmox-node2"]
-}
 
 import {
   id = "ns3156292.ip-135-125-223.eu"

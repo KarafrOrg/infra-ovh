@@ -9,9 +9,9 @@ dedicated_servers = {
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns338656.ip-5-196-78.eu"
-      ip               = "5.196.78.186"
-      commercial_range = "KS-LE-2"
+      service_name     = "ns338656-ip-5-196-78-eu"
+      ip               = "5-196-78-186"
+      commercial_range = "ks-le-2"
       datacenter       = "eu-west-gra"
     }
   },
@@ -21,22 +21,10 @@ dedicated_servers = {
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns510634.ip-198-27-70.net"
-      ip               = "198.27.70.67"
-      commercial_range = "KS-LE-1"
+      service_name     = "ns510634-ip-198-27-70-net"
+      ip               = "198-27-70-67"
+      commercial_range = "ks-le-1"
       datacenter       = "ca-east-bhs"
-    }
-  },
-  "proxmox-node2" = {
-    existing_server = true
-    monitoring      = true
-    state           = "ok"
-    ssh_key_secret  = "ovh-vps-ssh-public-key"
-    labels = {
-      service_name     = "ns3156252.ip-135-125-223.eu"
-      ip               = "135.125.223.211"
-      commercial_range = "SYS-1"
-      datacenter       = "eu-west-lim"
     }
   },
   "proxmox-node3" = {
@@ -45,9 +33,9 @@ dedicated_servers = {
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns3156292.ip-135-125-223.eu"
-      ip               = "135.125.223.213"
-      commercial_range = "SYS-1"
+      service_name     = "ns3156292-ip-135-125-223-eu"
+      ip               = "135-125-223-213"
+      commercial_range = "sys-1"
       datacenter       = "eu-west-lim"
     }
   },
@@ -57,9 +45,9 @@ dedicated_servers = {
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns324588.ip-37-187-157.eu"
-      ip               = "37.187.157.64"
-      commercial_range = "KS-LE-2"
+      service_name     = "ns324588-ip-37-187-157-eu"
+      ip               = "37-187-157-64"
+      commercial_range = "ks-le-2"
       datacenter       = "eu-west-gra"
     }
   },
@@ -69,9 +57,9 @@ dedicated_servers = {
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns331578.ip-37-187-159.eu"
-      ip               = "37.187.159.125"
-      commercial_range = "RISE-S"
+      service_name     = "ns331578-ip-37-187-159-eu"
+      ip               = "37-187-159-125"
+      commercial_range = "rise-s"
       datacenter       = "eu-west-gra"
     }
   },
