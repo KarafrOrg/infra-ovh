@@ -59,3 +59,53 @@ run = """
 cd "live/${ENVIRONMENT}"
 terraform destroy -auto-approve
 """
+
+[tasks.replace-servers]
+description = "Force replacement of all OVH dedicated servers"
+run = """
+cd "live/${ENVIRONMENT}"
+
+SERVERS=$(terraform show -json | jq -r '
+  .. | objects | select(has("type") and has("address"))
+  | select(.type == "ovh_dedicated_server")
+  | .address
+')
+
+if [ -z "$SERVERS" ]; then
+  echo "No dedicated servers found in state"
+  exit 1
+fi
+
+REPLACE_ARGS=""
+while IFS= read -r server; do
+  echo "Scheduling replacement: $server"
+  REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
+done <<< "$SERVERS"
+
+terraform apply -auto-approve $REPLACE_ARGS
+"""
+
+[tasks.replace-servers-plan]
+description = "Plan force replacement of all OVH dedicated servers (dry-run)"
+run = """
+cd "live/${ENVIRONMENT}"
+
+SERVERS=$(terraform show -json | jq -r '
+  .. | objects | select(has("type") and has("address"))
+  | select(.type == "ovh_dedicated_server")
+  | .address
+')
+
+if [ -z "$SERVERS" ]; then
+  echo "No dedicated servers found in state"
+  exit 1
+fi
+
+REPLACE_ARGS=""
+while IFS= read -r server; do
+  echo "Will replace: $server"
+  REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
+done <<< "$SERVERS"
+
+terraform plan $REPLACE_ARGS
+"""
