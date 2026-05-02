@@ -63,6 +63,9 @@ terraform destroy -auto-approve
 [tasks.replace-servers]
 description = "Force replacement of all OVH dedicated servers"
 run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
 cd "live/${ENVIRONMENT}"
 
 SERVERS=$(terraform show -json | jq -r '
@@ -80,7 +83,7 @@ REPLACE_ARGS=""
 while IFS= read -r server; do
   echo "Scheduling replacement: $server"
   REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
-done <<< "$SERVERS"
+done < <(echo "$SERVERS")
 
 terraform apply -auto-approve $REPLACE_ARGS
 """
@@ -88,6 +91,9 @@ terraform apply -auto-approve $REPLACE_ARGS
 [tasks.replace-servers-plan]
 description = "Plan force replacement of all OVH dedicated servers (dry-run)"
 run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
 cd "live/${ENVIRONMENT}"
 
 SERVERS=$(terraform show -json | jq -r '
@@ -105,7 +111,7 @@ REPLACE_ARGS=""
 while IFS= read -r server; do
   echo "Will replace: $server"
   REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
-done <<< "$SERVERS"
+done < <(echo "$SERVERS")
 
 terraform plan $REPLACE_ARGS
 """
