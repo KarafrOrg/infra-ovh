@@ -1,0 +1,39 @@
+name: Reinstall dedicated servers
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run (plan only, no apply)"
+        required: true
+        type: boolean
+        default: true
+
+concurrency: unique-state-lock
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  reinstall-servers-plan:
+    if: ${{ inputs.dry_run == true }}
+    uses: KarafrOrg/actions-terraform-core/.github/workflows/plan.yaml@v0.1.1
+    name: Plan server reinstall (dry run)
+    with:
+      environment: karafra-net
+      gcp_sa_email: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
+      gcp_wif_resource_id: ${{ vars.GCP_WIF_RESOURCE_ID }}
+      plan_command: mise run reinstall-servers-plan
+    secrets: inherit
+
+  reinstall-servers:
+    if: ${{ inputs.dry_run == false }}
+    uses: KarafrOrg/actions-terraform-core/.github/workflows/apply.yaml@v0.1.1
+    name: Reinstall dedicated servers
+    with:
+      environment: karafra-net
+      gcp_sa_email: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
+      gcp_wif_resource_id: ${{ vars.GCP_WIF_RESOURCE_ID }}
+      apply_command: mise run reinstall-servers
+    secrets: inherit
+

@@ -115,3 +115,60 @@ done < <(echo "$SERVERS")
 
 terraform plan $REPLACE_ARGS
 """
+
+[tasks.reinstall-servers]
+description = "Force reinstall of all OVH dedicated servers"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "live/${ENVIRONMENT}"
+
+SERVERS=$(terraform show -json | jq -r '
+  .. | objects | select(has("type") and has("address"))
+  | select(.type == "ovh_dedicated_server_reinstall_task")
+  | .address
+')
+
+if [ -z "$SERVERS" ]; then
+  echo "No dedicated server reinstall tasks found in state"
+  exit 1
+fi
+
+REPLACE_ARGS=""
+while IFS= read -r server; do
+  echo "Scheduling reinstall: $server"
+  REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
+done < <(echo "$SERVERS")
+
+terraform apply -auto-approve $REPLACE_ARGS
+"""
+
+[tasks.reinstall-servers-plan]
+description = "Plan force reinstall of all OVH dedicated servers (dry-run)"
+run = """
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "live/${ENVIRONMENT}"
+
+SERVERS=$(terraform show -json | jq -r '
+  .. | objects | select(has("type") and has("address"))
+  | select(.type == "ovh_dedicated_server_reinstall_task")
+  | .address
+')
+
+if [ -z "$SERVERS" ]; then
+  echo "No dedicated server reinstall tasks found in state"
+  exit 1
+fi
+
+REPLACE_ARGS=""
+while IFS= read -r server; do
+  echo "Will reinstall: $server"
+  REPLACE_ARGS="$REPLACE_ARGS -replace=$server"
+done < <(echo "$SERVERS")
+
+terraform plan $REPLACE_ARGS
+"""
+
