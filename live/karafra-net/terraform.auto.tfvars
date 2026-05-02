@@ -27,18 +27,6 @@ dedicated_servers = {
       datacenter       = "eu-west-lim"
     }
   },
-  "proxmox-node4" = {
-    existing_server = true
-    monitoring      = true
-    state           = "ok"
-    ssh_key_secret  = "ovh-vps-ssh-public-key"
-    labels = {
-      service_name     = "ns324588-ip-37-187-157-eu"
-      ip               = "37-187-157-64"
-      commercial_range = "ks-le-2"
-      datacenter       = "eu-west-gra"
-    }
-  },
   "proxmox-node5" = {
     existing_server = true
     monitoring      = true
