@@ -3,7 +3,7 @@ ovh_endpoint           = "ovh-ca"
 
 # Dedicated servers configuration
 dedicated_servers = {
-  "proxmox-node1" = {
+  openstack-node1 = {
     existing_server = true
     monitoring      = true
     state           = "ok"
@@ -15,28 +15,16 @@ dedicated_servers = {
       datacenter       = "ca-east-bhs"
     }
   },
-  "proxmox-node3" = {
+  openstack-node2 = {
     existing_server = true
     monitoring      = true
     state           = "ok"
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      service_name     = "ns3156292-ip-135-125-223-eu"
-      ip               = "135-125-223-213"
-      commercial_range = "sys-1"
-      datacenter       = "eu-west-lim"
-    }
-  },
-  "proxmox-node5" = {
-    existing_server = true
-    monitoring      = true
-    state           = "ok"
-    ssh_key_secret  = "ovh-vps-ssh-public-key"
-    labels = {
-      service_name     = "ns331578-ip-37-187-159-eu"
-      ip               = "37-187-159-125"
-      commercial_range = "rise-s"
-      datacenter       = "eu-west-gra"
+      service_name     = "ns3101879.ip-54-36-168.eu"
+      ip               = "54.36.168.182"
+      commercial_range = "ks-le-2"
+      datacenter       = "eu-central-waw-a"
     }
   },
 }
