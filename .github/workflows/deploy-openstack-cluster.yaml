@@ -73,6 +73,19 @@ jobs:
 
           echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
 
+      - name: Materialize Kolla passwords file
+        # language=bash
+        run: |
+          set -euo pipefail
+          passwords_path="${GITHUB_WORKSPACE}/ansible/.kolla/config/passwords.yml"
+
+          mkdir -p "$(dirname "${passwords_path}")"
+          gcloud secrets versions access latest --secret="openstack-passwords-yaml" > "${passwords_path}"
+          printf '\n' >> "${passwords_path}"
+          chmod 600 "${passwords_path}"
+
+          echo "OPENSTACK_KOLLA_PASSWORDS_PATH=${passwords_path}" >> "${GITHUB_ENV}"
+
       - name: Deploy OpenStack cluster with Kolla-Ansible
         env:
           ANSIBLE_CONFIG: ansible/ansible.cfg

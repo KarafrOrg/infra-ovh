@@ -47,14 +47,17 @@
     dest: "{{ openstack_kolla_inventory_path }}"
     mode: "0644"
 
-- name: Ensure Kolla passwords file exists
-  ansible.builtin.command:
-    argv:
-      - kolla-genpwd
-      - --passwords
-      - "{{ openstack_kolla_passwords_path }}"
-  args:
-    creates: "{{ openstack_kolla_passwords_path }}"
+- name: Check that Kolla passwords file is present
+  ansible.builtin.stat:
+    path: "{{ openstack_kolla_passwords_path }}"
+  register: openstack_kolla_passwords_stat
+
+- name: Validate Kolla passwords file
+  ansible.builtin.assert:
+    that:
+      - openstack_kolla_passwords_stat.stat.exists
+      - openstack_kolla_passwords_stat.stat.size > 0
+    fail_msg: "Kolla passwords file is missing at {{ openstack_kolla_passwords_path }}. Fetch it from GCP secret openstack-passwords-yaml before deployment."
 
 - name: Install Kolla-Ansible dependencies
   ansible.builtin.command:
