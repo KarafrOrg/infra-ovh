@@ -1,4 +1,4 @@
-name: Deploy OpenStack (Kolla-Ansible minimal)
+name: Deploy OpenStack (Kolla-Ansible)
 
 on:
   workflow_dispatch:
