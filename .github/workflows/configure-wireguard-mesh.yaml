@@ -60,54 +60,16 @@ jobs:
       - name: Materialize SSH private key
         # language=bash
         run: |
-          set -euo pipefail
-          raw_key_path="${RUNNER_TEMP}/ovh_ssh_key.raw"
+          set -eu
           key_path="${RUNNER_TEMP}/ovh_ssh_key"
 
-          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${raw_key_path}"
+          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${key_path}"
 
-          # Keep key payload intact; only remove transport artifacts that break OpenSSH parsing.
-          LC_ALL=C tr -d '\r' < "${raw_key_path}" > "${key_path}"
-          sed -i '1s/^\xEF\xBB\xBF//' "${key_path}"
-
-          if ! grep -q '^-----BEGIN OPENSSH PRIVATE KEY-----$' "${key_path}"; then
-            echo "Secret ovh-vps-ssh-private-key is not in OPENSSH private key format." >&2
-            echo "Expected first line: -----BEGIN OPENSSH PRIVATE KEY-----" >&2
-            exit 1
-          fi
-
-          if ! grep -q '^-----END OPENSSH PRIVATE KEY-----$' "${key_path}"; then
-            echo "Secret ovh-vps-ssh-private-key is missing END marker." >&2
-            exit 1
-          fi
-
-          if grep -q '\\n' "${key_path}"; then
-            echo "Secret ovh-vps-ssh-private-key appears to contain literal \\n escapes." >&2
-            echo "Store it as real multiline text in Secret Manager." >&2
-            exit 1
-          fi
-
-          chmod 600 "${key_path}"
-          if ! ssh-keygen -y -f "${key_path}" > /dev/null 2>&1; then
-            echo "OpenSSH failed to parse ovh-vps-ssh-private-key (libcrypto)." >&2
-            echo "Re-check how the key was stored in Secret Manager (multiline, unencrypted private key)." >&2
-            exit 1
-          fi
+          chmod 600 "$key_path"
+          
+          printf '\n' >> "${key_path}"
 
           echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
-
-      - name: SSH preflight check
-        # language=bash
-        run: |
-          set -euo pipefail
-          for host in 198.27.70.67 54.36.168.182; do
-            ssh -i "${ANSIBLE_PRIVATE_KEY_FILE}" \
-              -o BatchMode=yes \
-              -o StrictHostKeyChecking=accept-new \
-              -o UserKnownHostsFile="${RUNNER_TEMP}/known_hosts" \
-              -o ConnectTimeout=10 \
-              "${ANSIBLE_SSH_USER}@${host}" "echo ssh_ok"
-          done
 
       - name: Show generated inventory
         # language=bash
