@@ -172,3 +172,20 @@ done < <(echo "$SERVERS")
 terraform plan $REPLACE_ARGS
 """
 
+[tasks.wireguard-vpn-check]
+description = "Syntax-check the WireGuard Ansible playbook"
+run = """
+TFVARS_PATH=${TFVARS_PATH:-live/${ENVIRONMENT}/terraform.auto.tfvars}
+ANSIBLE_CONFIG=ansible/ansible.cfg \
+ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/wireguard.yml --syntax-check
+"""
+
+[tasks.wireguard-vpn]
+description = "Configure the WireGuard mesh across dedicated servers"
+run = """
+: "${ANSIBLE_PRIVATE_KEY_FILE:?ANSIBLE_PRIVATE_KEY_FILE must be set}"
+TFVARS_PATH=${TFVARS_PATH:-live/${ENVIRONMENT}/terraform.auto.tfvars}
+ANSIBLE_CONFIG=ansible/ansible.cfg \
+ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/wireguard.yml --private-key "$ANSIBLE_PRIVATE_KEY_FILE"
+"""
+

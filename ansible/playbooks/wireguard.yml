@@ -1,0 +1,16 @@
+---
+- name: Configure WireGuard mesh across OVH dedicated servers
+  hosts: ovh_dedicated_servers
+  become: true
+  gather_facts: false
+
+  pre_tasks:
+    - name: Ensure Python 3 is available on target hosts
+      ansible.builtin.raw: test -x /usr/bin/python3 || (apt-get update && apt-get install -y python3)
+      changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+  roles:
+    - role: wireguard_mesh
