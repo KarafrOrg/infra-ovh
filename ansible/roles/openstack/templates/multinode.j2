@@ -164,5 +164,25 @@ neutron
 [neutron-metadata-agent:children]
 neutron
 
+[neutron-ovn-metadata-agent:children]
+compute
+network
+
+[neutron-bgp-dragent:children]
+neutron
+
+[neutron-infoblox-ipam-agent:children]
+neutron
+
+[neutron-metering-agent:children]
+neutron
+
+[ironic-neutron-agent:children]
+neutron
+
+[neutron-ovn-agent:children]
+compute
+network
+
 [placement-api:children]
 placement
