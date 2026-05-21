@@ -20,4 +20,4 @@
     openstack_kolla_target_group: ovh_dedicated_servers
 
   roles:
-    - role: openstack_kolla_minimal
+    - role: openstack
