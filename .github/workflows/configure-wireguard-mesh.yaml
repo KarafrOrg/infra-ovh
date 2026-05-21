@@ -61,12 +61,12 @@ jobs:
         # language=bash
         run: |
           set -eu
-          key_path="$RUNNER_TEMP/ovh_ssh_key"
+          key_path="${RUNNER_TEMP}/ovh_ssh_key"
 
-          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "$key_path"
+          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${key_path}"
 
           chmod 600 "$key_path"
-          echo "ANSIBLE_PRIVATE_KEY_FILE=$key_path" >> "$GITHUB_ENV"
+          echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
 
       - name: Show generated inventory
         # language=bash
@@ -81,4 +81,4 @@ jobs:
           ansible-playbook \
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/wireguard.yml \
-            --private-key "$ANSIBLE_PRIVATE_KEY_FILE"
+            --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"
