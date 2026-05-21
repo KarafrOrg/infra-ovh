@@ -60,44 +60,15 @@ jobs:
       - name: Materialize SSH private key
         # language=bash
         run: |
-          set -euo pipefail
+          set -eu
           key_path="${RUNNER_TEMP}/ovh_ssh_key"
-          raw_key_path="${RUNNER_TEMP}/ovh_ssh_key.raw"
 
-          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${raw_key_path}"
+          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${key_path}"
 
-          # Accept raw PEM/OpenSSH keys, escaped newline payloads, or base64-encoded key payloads.
-          RAW_KEY_PATH="${raw_key_path}" KEY_PATH="${key_path}" python - <<'PY'
-          import base64
-          import os
-          import pathlib
-
-          raw_path = pathlib.Path(os.environ["RAW_KEY_PATH"])
-          key_path = pathlib.Path(os.environ["KEY_PATH"])
-          raw = raw_path.read_text(encoding="utf-8").strip()
-
-          candidates = []
-          candidates.append(raw.replace("\\r", ""))
-          candidates.append(raw.replace("\\r", "").replace("\\n", "\n"))
-
-          compact = "".join(raw.split())
-          try:
-              decoded = base64.b64decode(compact, validate=True).decode("utf-8", errors="strict")
-              candidates.append(decoded.replace("\r", ""))
-              candidates.append(decoded.replace("\r", "").replace("\\n", "\n"))
-          except Exception:
-              pass
-
-          marker = "-----BEGIN"
-          selected = next((c.strip() for c in candidates if marker in c), "")
-          if not selected:
-              raise SystemExit("The secret ovh-vps-ssh-private-key does not look like a valid SSH private key payload.")
-
-          key_path.write_text(selected.rstrip() + "\n", encoding="utf-8")
-          PY
-
-          chmod 600 "${key_path}"
-          ssh-keygen -y -f "${key_path}" > /dev/null
+          chmod 600 "$key_path"
+          
+          cat "${key_path}"
+          
           echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
 
       - name: Show generated inventory
