@@ -60,16 +60,28 @@ jobs:
       - name: Materialize SSH private key
         # language=bash
         run: |
-          set -eu
+          set -euo pipefail
           key_path="${RUNNER_TEMP}/ovh_ssh_key"
 
           gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${key_path}"
 
-          chmod 600 "$key_path"
-          
-          cat "${key_path}"
-          
+          chmod 600 "${key_path}"
+          ssh-keygen -y -f "${key_path}" > /dev/null
+
           echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
+
+      - name: SSH preflight check
+        # language=bash
+        run: |
+          set -euo pipefail
+          for host in 198.27.70.67 54.36.168.182; do
+            ssh -i "${ANSIBLE_PRIVATE_KEY_FILE}" \
+              -o BatchMode=yes \
+              -o StrictHostKeyChecking=accept-new \
+              -o UserKnownHostsFile="${RUNNER_TEMP}/known_hosts" \
+              -o ConnectTimeout=10 \
+              "${ANSIBLE_SSH_USER}@${host}" "echo ssh_ok"
+          done
 
       - name: Show generated inventory
         # language=bash
