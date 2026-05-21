@@ -18,7 +18,7 @@ dedicated_servers = {
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
       service_name     = "ns3101879-ip-54-36-168-eu"
-      ip               = "54.36.168.182"
+      ip               = "54-36-168-182"
       commercial_range = "ks-le-2"
       datacenter       = "eu-central-waw-a"
     }
