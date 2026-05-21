@@ -64,6 +64,7 @@
     argv:
       - kolla-ansible
       - install-deps
+  when: openstack_kolla_install_deps | bool
 
 - name: Run Kolla-Ansible deployment lifecycle
   ansible.builtin.command:

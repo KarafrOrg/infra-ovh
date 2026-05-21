@@ -14,6 +14,7 @@ openstack_kolla_enable_prometheus: true
 openstack_kolla_enable_horizon: true
 openstack_kolla_enable_grafana: false
 openstack_kolla_nova_compute_virt_type: qemu
+openstack_kolla_install_deps: false
 openstack_kolla_commands:
   - bootstrap-servers
   - prechecks
