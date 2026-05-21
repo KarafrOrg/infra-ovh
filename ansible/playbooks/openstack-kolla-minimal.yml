@@ -18,6 +18,23 @@
         state: present
         update_cache: true
 
+    - name: Ensure Docker engine is installed on target hosts
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: true
+
+    - name: Ensure Docker service is enabled and running
+      ansible.builtin.systemd:
+        name: docker
+        enabled: true
+        state: started
+
+    - name: Wait for Docker socket to be available
+      ansible.builtin.wait_for:
+        path: /var/run/docker.sock
+        timeout: 30
+
 - name: Deploy minimal OpenStack with Kolla-Ansible
   hosts: localhost
   connection: local
