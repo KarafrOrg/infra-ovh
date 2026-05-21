@@ -12,6 +12,12 @@
     - name: Gather facts
       ansible.builtin.setup:
 
+    - name: Ensure Python Docker SDK is installed on target hosts
+      ansible.builtin.apt:
+        name: python3-docker
+        state: present
+        update_cache: true
+
 - name: Deploy minimal OpenStack with Kolla-Ansible
   hosts: localhost
   connection: local
