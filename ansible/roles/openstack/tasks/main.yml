@@ -67,12 +67,15 @@
   when: openstack_kolla_install_deps | bool
 
 - name: Run Kolla-Ansible deployment lifecycle
-  ansible.builtin.command:
-    argv:
-      - kolla-ansible
-      - "{{ item }}"
-      - --configdir
-      - "{{ openstack_kolla_config_dir }}"
-      - --inventory
-      - "{{ openstack_kolla_inventory_path }}"
+  ansible.builtin.shell: |
+    set -o pipefail
+    log_file="{{ openstack_kolla_work_dir }}/kolla-{{ item }}.log"
+    echo ">>> Running kolla-ansible {{ item }} (log: ${log_file})"
+    stdbuf -oL -eL kolla-ansible "{{ item }}" \
+      --configdir "{{ openstack_kolla_config_dir }}" \
+      --inventory "{{ openstack_kolla_inventory_path }}" 2>&1 | tee "${log_file}"
+  args:
+    executable: /bin/bash
   loop: "{{ openstack_kolla_commands }}"
+  loop_control:
+    label: "{{ item }}"
