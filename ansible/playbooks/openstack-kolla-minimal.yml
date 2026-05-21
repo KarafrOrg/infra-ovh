@@ -1,0 +1,23 @@
+---
+- name: Prepare OVH nodes for Kolla-Ansible
+  hosts: ovh_dedicated_servers
+  become: true
+  gather_facts: false
+
+  pre_tasks:
+    - name: Ensure Python 3 is available on target hosts
+      ansible.builtin.raw: test -x /usr/bin/python3 || (apt-get update && apt-get install -y python3)
+      changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+- name: Deploy minimal OpenStack with Kolla-Ansible
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    openstack_kolla_target_group: ovh_dedicated_servers
+
+  roles:
+    - role: openstack_kolla_minimal

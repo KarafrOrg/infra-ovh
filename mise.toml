@@ -189,3 +189,19 @@ ANSIBLE_CONFIG=ansible/ansible.cfg \
 ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/wireguard.yml --private-key "$ANSIBLE_PRIVATE_KEY_FILE"
 """
 
+[tasks.openstack-kolla-minimal-check]
+description = "Syntax-check Kolla-Ansible OpenStack playbook"
+run = """
+TFVARS_PATH=${TFVARS_PATH:-live/${ENVIRONMENT}/terraform.auto.tfvars}
+ANSIBLE_CONFIG=ansible/ansible.cfg \
+ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-minimal.yml --syntax-check
+"""
+
+[tasks.openstack-kolla-minimal]
+description = "Deploy OpenStack cluster with Kolla-Ansible"
+run = """
+: "${ANSIBLE_PRIVATE_KEY_FILE:?ANSIBLE_PRIVATE_KEY_FILE must be set}"
+TFVARS_PATH=${TFVARS_PATH:-live/${ENVIRONMENT}/terraform.auto.tfvars}
+ANSIBLE_CONFIG=ansible/ansible.cfg \
+ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-minimal.yml --private-key "$ANSIBLE_PRIVATE_KEY_FILE"
+"""

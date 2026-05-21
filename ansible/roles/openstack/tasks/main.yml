@@ -1,0 +1,74 @@
+---
+- name: Build target host list
+  ansible.builtin.set_fact:
+    openstack_kolla_hosts: "{{ groups[openstack_kolla_target_group] | default([]) | sort }}"
+
+- name: Validate required topology
+  ansible.builtin.assert:
+    that:
+      - openstack_kolla_hosts | length >= 2
+    fail_msg: "Need at least 2 hosts in group '{{ openstack_kolla_target_group }}' for 1 controller + 1 compute."
+
+- name: Select controller and compute nodes
+  ansible.builtin.set_fact:
+    openstack_kolla_controller_host: "{{ openstack_kolla_hosts[0] }}"
+    openstack_kolla_compute_hosts: "{{ openstack_kolla_hosts[1:] }}"
+
+- name: Validate controller networking facts
+  ansible.builtin.assert:
+    that:
+      - hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface is defined
+      - hostvars[openstack_kolla_controller_host].wireguard_address is defined
+    fail_msg: "Controller host facts are incomplete. Run wireguard playbook first and ensure facts are available."
+
+- name: Compute derived Kolla networking values
+  ansible.builtin.set_fact:
+    openstack_kolla_network_interface: "{{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface }}"
+    openstack_kolla_internal_vip_address: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '') }}"
+
+- name: Ensure Kolla working directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - "{{ openstack_kolla_work_dir }}"
+    - "{{ openstack_kolla_config_dir }}"
+
+- name: Render Kolla globals configuration
+  ansible.builtin.template:
+    src: globals.yml.j2
+    dest: "{{ openstack_kolla_config_dir }}/globals.yml"
+    mode: "0644"
+
+- name: Render Kolla multinode inventory
+  ansible.builtin.template:
+    src: multinode.j2
+    dest: "{{ openstack_kolla_inventory_path }}"
+    mode: "0644"
+
+- name: Ensure Kolla passwords file exists
+  ansible.builtin.command:
+    argv:
+      - kolla-genpwd
+      - --passwords
+      - "{{ openstack_kolla_passwords_path }}"
+  args:
+    creates: "{{ openstack_kolla_passwords_path }}"
+
+- name: Install Kolla-Ansible dependencies
+  ansible.builtin.command:
+    argv:
+      - kolla-ansible
+      - install-deps
+
+- name: Run Kolla-Ansible deployment lifecycle
+  ansible.builtin.command:
+    argv:
+      - kolla-ansible
+      - --configdir
+      - "{{ openstack_kolla_config_dir }}"
+      - --inventory
+      - "{{ openstack_kolla_inventory_path }}"
+      - "{{ item }}"
+  loop: "{{ openstack_kolla_commands }}"

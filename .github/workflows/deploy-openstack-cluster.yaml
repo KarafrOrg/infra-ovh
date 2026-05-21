@@ -1,0 +1,84 @@
+name: Deploy OpenStack (Kolla-Ansible minimal)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Terraform environment / tfvars directory name
+        required: true
+        default: karafra-net
+        type: string
+  workflow_run:
+    workflows:
+      - Configure WireGuard mesh
+    types:
+      - completed
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: openstack-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-openstack-kolla-minimal:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    name: Deploy OpenStack minimal cluster (controller + compute)
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}
+      TFVARS_PATH: live/${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}/terraform.auto.tfvars
+      ANSIBLE_SSH_USER: ubuntu
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RESOURCE_ID }}
+          service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Ansible and Kolla dependencies
+        # language=bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ansible/requirements.txt
+
+      - name: Materialize SSH private key
+        # language=bash
+        run: |
+          set -eu
+          key_path="${RUNNER_TEMP}/ovh_ssh_key"
+
+          gcloud secrets versions access latest --secret="ovh-vps-ssh-private-key" > "${key_path}"
+
+          chmod 600 "$key_path"
+          
+          printf '\n' >> "${key_path}"
+
+          echo "ANSIBLE_PRIVATE_KEY_FILE=${key_path}" >> "${GITHUB_ENV}"
+
+      - name: Deploy OpenStack cluster with Kolla-Ansible
+        env:
+          ANSIBLE_CONFIG: ansible/ansible.cfg
+        # language=bash
+        run: |
+          ansible-playbook \
+            -i ansible/scripts/inventory_from_tfvars.py \
+            ansible/playbooks/openstack-kolla-minimal.yml \
+            --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"

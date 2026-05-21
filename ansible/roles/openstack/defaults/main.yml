@@ -1,0 +1,21 @@
+---
+openstack_kolla_target_group: ovh_dedicated_servers
+openstack_kolla_work_dir: "{{ (lookup('env', 'GITHUB_WORKSPACE') | default('', true)) | ternary(lookup('env', 'GITHUB_WORKSPACE') ~ '/ansible/.kolla', playbook_dir ~ '/../.kolla') }}"
+openstack_kolla_config_dir: "{{ openstack_kolla_work_dir }}/config"
+openstack_kolla_inventory_path: "{{ openstack_kolla_work_dir }}/multinode"
+openstack_kolla_passwords_path: "{{ openstack_kolla_config_dir }}/passwords.yml"
+openstack_kolla_ansible_user: "{{ lookup('env', 'ANSIBLE_SSH_USER') | default('ubuntu', true) }}"
+openstack_kolla_private_key_file: "{{ lookup('env', 'ANSIBLE_PRIVATE_KEY_FILE') | default('', true) }}"
+openstack_kolla_release: "2025.1"
+openstack_kolla_base_distro: ubuntu
+openstack_kolla_install_type: binary
+openstack_kolla_tunnel_interface: wg0
+openstack_kolla_enable_prometheus: true
+openstack_kolla_enable_horizon: true
+openstack_kolla_enable_grafana: false
+openstack_kolla_nova_compute_virt_type: qemu
+openstack_kolla_commands:
+  - bootstrap-servers
+  - prechecks
+  - deploy
+  - post-deploy
