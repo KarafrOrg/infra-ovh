@@ -79,6 +79,16 @@ jobs:
           test -f "${kolla_ansible_dir}/kolla-host.yml"
           test -f "${kolla_ansible_dir}/post-deploy.yml"
 
+      - name: Install Kolla Ansible Galaxy dependencies
+        # language=bash
+        run: |
+          set -euo pipefail
+          kolla_share_dir="${pythonLocation}/share/kolla-ansible"
+          ansible-galaxy collection install -r "${kolla_share_dir}/requirements.yml" --force
+          if [ -f "${kolla_share_dir}/requirements-core.yml" ]; then
+            ansible-galaxy collection install -r "${kolla_share_dir}/requirements-core.yml" --force
+          fi
+
       - name: Materialize SSH private key
         # language=bash
         run: |
