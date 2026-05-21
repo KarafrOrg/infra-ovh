@@ -70,9 +70,9 @@
   ansible.builtin.command:
     argv:
       - kolla-ansible
+      - "{{ item }}"
       - --configdir
       - "{{ openstack_kolla_config_dir }}"
       - --inventory
       - "{{ openstack_kolla_inventory_path }}"
-      - "{{ item }}"
   loop: "{{ openstack_kolla_commands }}"
