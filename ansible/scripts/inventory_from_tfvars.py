@@ -41,6 +41,10 @@ def normalize_public_ip(value: str | None) -> str | None:
     return value
 
 
+def normalize_host_alias(value: str) -> str:
+    return value.replace("-", "_")
+
+
 def build_inventory() -> dict:
     tfvars_path = Path(os.getenv("TFVARS_PATH", DEFAULT_TFVARS_PATH))
     group_name = os.getenv("WIREGUARD_GROUP_NAME", DEFAULT_GROUP_NAME)
@@ -59,26 +63,35 @@ def build_inventory() -> dict:
     if not isinstance(dedicated_servers, dict):
         fail(f"Expected 'dedicated_servers' to be a map in {tfvars_path}")
 
-    hosts = sorted(dedicated_servers)
-    if len(hosts) >= wireguard_network.num_addresses - 1:
+    source_hosts = sorted(dedicated_servers)
+    if len(source_hosts) >= wireguard_network.num_addresses - 1:
         fail(
-            f"WireGuard network {wireguard_network} is too small for {len(hosts)} hosts"
+            f"WireGuard network {wireguard_network} is too small for {len(source_hosts)} hosts"
         )
 
+    hosts: list[str] = []
     hostvars: dict[str, dict] = {}
-    for index, host_name in enumerate(hosts, start=1):
-        server_config = dedicated_servers[host_name] or {}
+    for index, source_host_name in enumerate(source_hosts, start=1):
+        host_alias = normalize_host_alias(source_host_name)
+        if host_alias in hostvars:
+            fail(
+                f"Normalized host alias '{host_alias}' collides in {tfvars_path}. "
+                "Use unique dedicated_servers keys after replacing '-' with '_'."
+            )
+
+        server_config = dedicated_servers[source_host_name] or {}
         labels = server_config.get("labels", {}) or {}
         public_ip = normalize_public_ip(labels.get("ip") or server_config.get("ip"))
         service_name = labels.get("service_name") or server_config.get("service_name")
 
         if not public_ip and not service_name:
             fail(
-                f"Host '{host_name}' is missing both labels.ip and service_name in {tfvars_path}"
+                f"Host '{source_host_name}' is missing both labels.ip and service_name in {tfvars_path}"
             )
 
         address = wireguard_network.network_address + index
-        hostvars[host_name] = {
+        hosts.append(host_alias)
+        hostvars[host_alias] = {
             "ansible_host": public_ip or service_name,
             "ansible_user": ansible_user,
             "ansible_python_interpreter": "/usr/bin/python3",
@@ -88,6 +101,7 @@ def build_inventory() -> dict:
             "wireguard_listen_port": wireguard_listen_port,
             "wireguard_network": str(wireguard_network),
             "wireguard_service_name": service_name,
+            "wireguard_source_host_name": source_host_name,
         }
 
     return {
