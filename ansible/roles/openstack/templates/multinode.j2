@@ -27,6 +27,9 @@
 [deployment]
 localhost ansible_connection=local
 
+[bifrost:children]
+deployment
+
 [baremetal:children]
 control
 network

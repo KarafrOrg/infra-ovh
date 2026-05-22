@@ -18,6 +18,12 @@
         state: present
         update_cache: true
 
+    - name: Ensure Python passlib is installed on target hosts
+      ansible.builtin.apt:
+        name: python3-passlib
+        state: present
+        update_cache: true
+
     - name: Ensure Docker engine is installed on target hosts
       ansible.builtin.apt:
         name: docker.io
