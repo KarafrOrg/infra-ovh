@@ -88,6 +88,12 @@ compute
 network
 storage
 
+[prometheus-mysqld-exporter:children]
+mariadb
+
+[prometheus-memcached-exporter:children]
+memcached
+
 [prometheus-cadvisor:children]
 monitoring
 control
@@ -101,6 +107,15 @@ monitoring
 [prometheus-openstack-exporter:children]
 monitoring
 
+[prometheus-elasticsearch-exporter:children]
+opensearch
+
+[prometheus-blackbox-exporter:children]
+monitoring
+
+[prometheus-libvirt-exporter:children]
+compute
+
 [cron:children]
 common
 
@@ -112,6 +127,9 @@ common
 
 [kolla-toolbox:children]
 common
+
+[opensearch:children]
+control
 
 [glance-api:children]
 glance
