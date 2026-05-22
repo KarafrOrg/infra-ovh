@@ -24,11 +24,24 @@
         state: present
         update_cache: true
 
+    - name: Ensure Docker-related packages are not held
+      ansible.builtin.dpkg_selections:
+        name: "{{ item }}"
+        selection: install
+      loop:
+        - docker.io
+        - containerd
+        - runc
+
     - name: Ensure Docker engine is installed on target hosts
       ansible.builtin.apt:
-        name: docker.io
+        name:
+          - docker.io
+          - containerd
+          - runc
         state: present
         update_cache: true
+        allow_change_held_packages: true
 
     - name: Ensure Docker service is enabled and running
       ansible.builtin.systemd:

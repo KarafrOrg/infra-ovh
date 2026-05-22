@@ -13,6 +13,12 @@ openstack_kolla_tunnel_interface: wg0
 openstack_kolla_enable_prometheus: true
 openstack_kolla_enable_horizon: true
 openstack_kolla_enable_grafana: false
+openstack_kolla_prometheus_scrape_interval: "60s"
+openstack_kolla_prometheus_remote_write_url: "https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push"
+openstack_kolla_prometheus_remote_write_username: "2220727"
+openstack_kolla_prometheus_remote_write_password: "glc_eyJvIjoiMTMyNzUxMSIsIm4iOiJzdGFjay0xMTQ4MjQyLWFsbG95LW9wZW5zdGFjay1wbGF0Zm9ybSIsImsiOiI5eW1MODA1MzAwWXM2Qks5T0s3elZRR2EiLCJtIjp7InIiOiJwcm9kLWV1LXdlc3QtMiJ9fQ=="
+openstack_kolla_prometheus_node_targets:
+  - "localhost:9090"
 openstack_kolla_nova_compute_virt_type: qemu
 openstack_kolla_install_deps: false
 openstack_kolla_internal_vip_override: ""

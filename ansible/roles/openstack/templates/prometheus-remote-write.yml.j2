@@ -1,0 +1,16 @@
+global:
+  scrape_interval: "{{ openstack_kolla_prometheus_scrape_interval }}"
+
+remote_write:
+  - url: "{{ openstack_kolla_prometheus_remote_write_url }}"
+    basic_auth:
+      username: "{{ openstack_kolla_prometheus_remote_write_username }}"
+      password: "{{ openstack_kolla_prometheus_remote_write_password }}"
+
+scrape_configs:
+  - job_name: node
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_node_targets %}
+          - "{{ target }}"
+{% endfor %}

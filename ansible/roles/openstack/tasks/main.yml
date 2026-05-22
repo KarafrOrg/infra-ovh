@@ -47,6 +47,7 @@
   loop:
     - "{{ openstack_kolla_work_dir }}"
     - "{{ openstack_kolla_config_dir }}"
+    - "{{ openstack_kolla_config_dir }}/prometheus/prometheus.yml.d"
 
 - name: Render Kolla globals configuration
   ansible.builtin.template:
@@ -58,6 +59,12 @@
   ansible.builtin.template:
     src: multinode.j2
     dest: "{{ openstack_kolla_inventory_path }}"
+    mode: "0644"
+
+- name: Render Prometheus remote_write extension
+  ansible.builtin.template:
+    src: prometheus-remote-write.yml.j2
+    dest: "{{ openstack_kolla_config_dir }}/prometheus/prometheus.yml.d/10-remote-write.yml"
     mode: "0644"
 
 - name: Check that Kolla passwords file is present
