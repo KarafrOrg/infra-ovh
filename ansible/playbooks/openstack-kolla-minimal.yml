@@ -12,6 +12,23 @@
     - name: Gather facts
       ansible.builtin.setup:
 
+    - name: Ensure kernel extras are installed for current kernel
+      ansible.builtin.apt:
+        name: "linux-modules-extra-{{ ansible_kernel }}"
+        state: present
+        update_cache: true
+
+    - name: Ensure Open vSwitch userspace tools are installed on target hosts
+      ansible.builtin.apt:
+        name: openvswitch-switch
+        state: present
+        update_cache: true
+
+    - name: Ensure openvswitch kernel module is loaded
+      community.general.modprobe:
+        name: openvswitch
+        state: present
+
     - name: Ensure Python Docker SDK is installed on target hosts
       ansible.builtin.apt:
         name: python3-docker
