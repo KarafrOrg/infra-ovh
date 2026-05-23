@@ -142,6 +142,13 @@
     executable: "{{ openstack_kolla_venv_path }}/bin/pip"
   when: openstack_kolla_manage_control_deps | bool
 
+- name: Patch Kolla MariaDB WSREP wait handler for transient query failures
+  ansible.builtin.replace:
+    path: "{{ openstack_kolla_venv_path }}/share/kolla-ansible/ansible/roles/mariadb/handlers/main.yml"
+    regexp: '^\s*until: result\.query_result\[0\]\[0\]\[''Value''\] == "Synced"$'
+    replace: "  until: result is succeeded and (result.query_result | default([]) | length > 0) and (result.query_result[0] | length > 0) and (result.query_result[0][0]['Value'] | default('')) == \"Synced\""
+  when: openstack_kolla_manage_control_deps | bool
+
 - name: Generate Kolla passwords file when missing
   block:
     - name: Seed Kolla passwords file from example template

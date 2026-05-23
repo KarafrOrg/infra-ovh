@@ -9,22 +9,22 @@ on:
         default: karafra-net
         type: string
       run_pre_checks:
-        description: "Whether to run Kolla-Ansible prechecks after deployment (will use --use-test-images option)"
+        description: "Run Kolla-Ansible pre-checks during deployment (with --use-test-images)"
         required: true
         type: boolean
         default: true
       run_image_pull:
-        description: "Whether to run Kolla-Ansible pull after deployment"
+        description: "Run Kolla-Ansible image pull during deployment"
         required: true
         type: boolean
         default: true
       run_deploy:
-        description: "Whether to run Kolla-Ansible deploy after deployment"
+        description: "Run Kolla-Ansible deploy during deployment"
         required: true
         type: boolean
         default: true
       run_post_deploy:
-        description: "Whether to run Kolla-Ansible post-deploy after deployment"
+        description: "Run Kolla-Ansible post-deploy during deployment"
         required: true
         type: boolean
         default: true
