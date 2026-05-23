@@ -26,6 +26,7 @@ jobs:
   deploy-openstack-kolla-minimal:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Deploy OpenStack minimal cluster (controller + compute)
+    environment: "${{ inputs.environment }}-openstack"
     runs-on: ubuntu-latest
     timeout-minutes: 360
     env:
