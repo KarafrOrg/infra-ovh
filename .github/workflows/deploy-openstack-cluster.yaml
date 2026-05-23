@@ -147,6 +147,7 @@ jobs:
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: prechecks
+          extra-args: '--use-test-images'
 
       - name: Run Kolla-Ansible pull
         uses: ./.github/actions/run-kolla-ansible

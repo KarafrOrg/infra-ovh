@@ -6,7 +6,7 @@ inputs:
     description: Kolla-Ansible command to run (e.g. deploy, prechecks, reconfigure)
     required: true
   extra-args:
-    description: Optional additional CLI arguments to place before the command
+    description: Optional additional CLI arguments to append after the command/options
     required: false
     default: ""
   kolla-cmd:
@@ -101,7 +101,8 @@ runs:
         )
 
         if [[ -n "$extra_args" ]]; then
-          read -r -a extra <<< "$extra_args"
+          # Parse quoted CLI fragments safely (e.g. --limit "node 1" --tags prechecks)
+          mapfile -t extra < <(python3 -c 'import shlex,sys; [print(x) for x in shlex.split(sys.argv[1])]' "$extra_args")
           args+=("${extra[@]}")
         fi
 
