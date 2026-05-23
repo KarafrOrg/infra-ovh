@@ -139,6 +139,36 @@ jobs:
 
           echo "OPENSTACK_KOLLA_PASSWORDS_PATH=${passwords_path}" >> "${GITHUB_ENV}"
 
+      - name: Materialize Octavia client cert and key
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-client-cert-and-key-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client.cert-and-key.pem
+
+      - name: Materialize Octavia client CA cert
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-client-ca-cert-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client_ca.cert.pem
+
+      - name: Materialize Octavia server CA cert
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-cert-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.cert.pem
+
+      - name: Materialize Octavia server CA key
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-key-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.key.pem
+
+      - name: Materialize Octavia CA passphrase env
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-passphrase
+          env-name: OPENSTACK_KOLLA_OCTAVIA_CA_PASSWORD
+
       - name: Deploy OpenStack cluster with Kolla-Ansible
         env:
           ANSIBLE_CONFIG: ansible/ansible.cfg

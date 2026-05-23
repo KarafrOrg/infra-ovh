@@ -26,17 +26,31 @@
     openstack_kolla_network_interface: "{{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface }}"
     openstack_kolla_wireguard_prefix: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '') }}"
     openstack_kolla_wireguard_host_ips: "{{ openstack_kolla_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
+    openstack_kolla_controller_wireguard_ip: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '') }}"
+    openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
+
+- name: Derive Prometheus target endpoints from discovered hosts
+  ansible.builtin.set_fact:
+    openstack_kolla_prometheus_node_targets: "{{ openstack_kolla_prometheus_node_targets if (openstack_kolla_prometheus_node_targets | length > 0) else (openstack_kolla_wireguard_host_ips | map('regex_replace', '$', ':9100') | list) }}"
+    openstack_kolla_prometheus_cadvisor_targets: "{{ openstack_kolla_prometheus_cadvisor_targets if (openstack_kolla_prometheus_cadvisor_targets | length > 0) else (openstack_kolla_wireguard_host_ips | map('regex_replace', '$', ':18080') | list) }}"
+    openstack_kolla_prometheus_server_targets: "{{ openstack_kolla_prometheus_server_targets if (openstack_kolla_prometheus_server_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9091'] }}"
+    openstack_kolla_prometheus_alertmanager_targets: "{{ openstack_kolla_prometheus_alertmanager_targets if (openstack_kolla_prometheus_alertmanager_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9093'] }}"
+    openstack_kolla_prometheus_openstack_exporter_targets: "{{ openstack_kolla_prometheus_openstack_exporter_targets if (openstack_kolla_prometheus_openstack_exporter_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9198'] }}"
+    openstack_kolla_prometheus_blackbox_targets: "{{ openstack_kolla_prometheus_blackbox_targets if (openstack_kolla_prometheus_blackbox_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9115'] }}"
+    openstack_kolla_prometheus_memcached_exporter_targets: "{{ openstack_kolla_prometheus_memcached_exporter_targets if (openstack_kolla_prometheus_memcached_exporter_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9150'] }}"
+    openstack_kolla_prometheus_mysqld_exporter_targets: "{{ openstack_kolla_prometheus_mysqld_exporter_targets if (openstack_kolla_prometheus_mysqld_exporter_targets | length > 0) else [openstack_kolla_controller_wireguard_ip ~ ':9104'] }}"
+    openstack_kolla_prometheus_libvirt_exporter_targets: "{{ openstack_kolla_prometheus_libvirt_exporter_targets if (openstack_kolla_prometheus_libvirt_exporter_targets | length > 0) else (openstack_kolla_compute_wireguard_ips | map('regex_replace', '$', ':9177') | list) }}"
 
 - name: Compute Kolla VIP addresses
   ansible.builtin.set_fact:
-    openstack_kolla_internal_vip_address: "{{ openstack_kolla_internal_vip_override if openstack_kolla_internal_vip_override | length > 0 else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_internal_vip_host_octet) }}"
-    openstack_kolla_external_vip_address: "{{ openstack_kolla_external_vip_override if openstack_kolla_external_vip_override | length > 0 else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_external_vip_host_octet) }}"
+    openstack_kolla_internal_vip_address: "{{ openstack_kolla_internal_vip_override if openstack_kolla_internal_vip_override | length > 0 else ((hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) if openstack_kolla_use_controller_ip_as_vip | bool else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_internal_vip_host_octet)) }}"
+    openstack_kolla_external_vip_address: "{{ openstack_kolla_external_vip_override if openstack_kolla_external_vip_override | length > 0 else ((hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) if openstack_kolla_use_controller_ip_as_vip | bool else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_external_vip_host_octet)) }}"
 
 - name: Validate Kolla VIP addresses are free in WireGuard subnet
   ansible.builtin.assert:
     that:
-      - openstack_kolla_internal_vip_address not in openstack_kolla_wireguard_host_ips
-      - openstack_kolla_external_vip_address not in openstack_kolla_wireguard_host_ips
+      - (openstack_kolla_internal_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_internal_vip_address == (hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')))
+      - (openstack_kolla_external_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_external_vip_address == (hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')))
     fail_msg: "Computed Kolla VIP collides with host WireGuard IPs: {{ openstack_kolla_wireguard_host_ips }}"
 
 - name: Ensure Kolla working directories exist
@@ -46,8 +60,41 @@
     mode: "0755"
   loop:
     - "{{ openstack_kolla_work_dir }}"
+    - "{{ openstack_kolla_tool_shim_dir }}"
     - "{{ openstack_kolla_config_dir }}"
+    - "{{ openstack_kolla_config_dir }}/octavia"
     - "{{ openstack_kolla_config_dir }}/prometheus/prometheus.yml.d"
+
+- name: Install readlink compatibility shim for kolla-ansible
+  ansible.builtin.copy:
+    dest: "{{ openstack_kolla_tool_shim_dir }}/readlink"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      if [ "${1:-}" = "-e" ]; then
+        shift
+        python3 -c 'import os,sys; rc=0; [print(os.path.realpath(p)) if os.path.exists(p) else (rc:=1) for p in sys.argv[1:]]; sys.exit(rc)' "$@"
+        exit $?
+      fi
+      exec /usr/bin/readlink "$@"
+
+- name: Install getopt compatibility shim for kolla-ansible
+  ansible.builtin.copy:
+    dest: "{{ openstack_kolla_tool_shim_dir }}/getopt"
+    mode: "0755"
+    content: |
+      #!/usr/bin/env bash
+      # Prefer Homebrew GNU getopt on macOS; fall back to system getopt on Linux.
+      _gnu_getopt="{{ openstack_kolla_getopt_bin }}/getopt"
+      if [ -x "$_gnu_getopt" ]; then
+        exec "$_gnu_getopt" "$@"
+      fi
+      exec getopt "$@"
+
+- name: Build control-host PATH for kolla commands
+  ansible.builtin.set_fact:
+    openstack_kolla_exec_path: "{{ [openstack_kolla_getopt_bin, openstack_kolla_tool_shim_dir, openstack_kolla_venv_path ~ '/bin', ansible_env.PATH | default(lookup('env', 'PATH'))] | join(':') }}"
 
 - name: Render Kolla globals configuration
   ansible.builtin.template:
@@ -72,18 +119,83 @@
     path: "{{ openstack_kolla_passwords_path }}"
   register: openstack_kolla_passwords_stat
 
+- name: Ensure Python virtualenv for Kolla-Ansible exists
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -m
+      - venv
+      - "{{ openstack_kolla_venv_path }}"
+  args:
+    creates: "{{ openstack_kolla_venv_path }}/bin/python"
+  when: openstack_kolla_manage_control_deps | bool
+
+- name: Install Kolla-Ansible into control-host virtualenv
+  ansible.builtin.pip:
+    name: "{{ openstack_kolla_pip_packages }}"
+    executable: "{{ openstack_kolla_venv_path }}/bin/pip"
+  when: openstack_kolla_manage_control_deps | bool
+
+- name: Generate Kolla passwords file when missing
+  block:
+    - name: Seed Kolla passwords file from example template
+      ansible.builtin.copy:
+        src: "{{ openstack_kolla_venv_path }}/share/kolla-ansible/etc_examples/kolla/passwords.yml"
+        dest: "{{ openstack_kolla_passwords_path }}"
+        remote_src: true
+        mode: "0600"
+
+    - name: Populate Kolla passwords file
+      ansible.builtin.command:
+        argv:
+          - "{{ openstack_kolla_genpwd_cmd }}"
+          - -p
+          - "{{ openstack_kolla_passwords_path }}"
+      environment:
+        PATH: "{{ openstack_kolla_exec_path }}"
+        VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
+  when: (not openstack_kolla_passwords_stat.stat.exists) or (openstack_kolla_passwords_stat.stat.size | default(0) | int == 0)
+
+- name: Re-check that Kolla passwords file is present
+  ansible.builtin.stat:
+    path: "{{ openstack_kolla_passwords_path }}"
+  register: openstack_kolla_passwords_stat
+
 - name: Validate Kolla passwords file
   ansible.builtin.assert:
     that:
       - openstack_kolla_passwords_stat.stat.exists
       - openstack_kolla_passwords_stat.stat.size > 0
-    fail_msg: "Kolla passwords file is missing at {{ openstack_kolla_passwords_path }}. Fetch it from GCP secret openstack-passwords-yaml before deployment."
+    fail_msg: "Kolla passwords file is missing or empty at {{ openstack_kolla_passwords_path }}. Set OPENSTACK_KOLLA_PASSWORDS_PATH to an existing secret file or ensure {{ openstack_kolla_genpwd_cmd }} is available."
+
+- name: Ensure Octavia CA password is present in Kolla passwords
+  ansible.builtin.lineinfile:
+    path: "{{ openstack_kolla_passwords_path }}"
+    regexp: '^octavia_ca_password:'
+    line: "octavia_ca_password: {{ openstack_kolla_octavia_ca_password | to_json }}"
+    mode: "0600"
+  when: openstack_kolla_octavia_ca_password | length > 0
+
+- name: Install required Ansible collections for Kolla
+  ansible.builtin.command:
+    argv:
+      - "{{ openstack_kolla_venv_path }}/bin/ansible-galaxy"
+      - collection
+      - install
+      - "{{ item }}"
+  environment:
+    PATH: "{{ openstack_kolla_exec_path }}"
+    VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
+  loop: "{{ openstack_kolla_required_collections }}"
 
 - name: Install Kolla-Ansible dependencies
   ansible.builtin.command:
     argv:
-      - kolla-ansible
+      - "{{ openstack_kolla_ansible_cmd }}"
       - install-deps
+  environment:
+    PATH: "{{ openstack_kolla_exec_path }}"
+    VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
   when: openstack_kolla_install_deps | bool
 
 - name: Run Kolla-Ansible deployment lifecycle
@@ -91,11 +203,17 @@
     set -o pipefail
     log_file="{{ openstack_kolla_work_dir }}/kolla-{{ item }}.log"
     echo ">>> Running kolla-ansible {{ item }} (log: ${log_file})"
-    stdbuf -oL -eL kolla-ansible "{{ item }}" \
+    stdbuf -oL -eL "{{ openstack_kolla_ansible_cmd }}" \
       --configdir "{{ openstack_kolla_config_dir }}" \
-      --inventory "{{ openstack_kolla_inventory_path }}" 2>&1 | tee "${log_file}"
+      --inventory "{{ openstack_kolla_inventory_path }}" \
+      --passwords "{{ openstack_kolla_passwords_path }}" \
+      {{ openstack_kolla_extra_args }} \
+      "{{ item }}" 2>&1 | tee "${log_file}"
   args:
     executable: /bin/bash
+  environment:
+    PATH: "{{ openstack_kolla_exec_path }}"
+    VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
   loop: "{{ openstack_kolla_commands }}"
   loop_control:
     label: "{{ item }}"

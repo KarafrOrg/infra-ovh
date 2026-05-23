@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import hcl2
 import ipaddress
 import json
 import os
@@ -8,11 +9,9 @@ import re
 import sys
 from pathlib import Path
 
-import hcl2
-
 DEFAULT_TFVARS_PATH = "live/karafra-net/terraform.auto.tfvars"
 DEFAULT_GROUP_NAME = "ovh_dedicated_servers"
-DEFAULT_WIREGUARD_NETWORK = "10.44.0.0/24"
+DEFAULT_WIREGUARD_NETWORK = "10.200.0.0/24"
 DEFAULT_WIREGUARD_LISTEN_PORT = 51820
 DEFAULT_ANSIBLE_USER = "ubuntu"
 HYPHENATED_IPV4 = re.compile(r"^\d{1,3}(?:-\d{1,3}){3}$")
@@ -35,9 +34,18 @@ def normalize_public_ip(value: str | None) -> str | None:
     if not value:
         return None
 
+    value = clean_wrapped_quotes(value)
+
     if HYPHENATED_IPV4.fullmatch(value):
         return value.replace("-", ".")
 
+    return value
+
+
+def clean_wrapped_quotes(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
     return value
 
 
@@ -81,8 +89,10 @@ def build_inventory() -> dict:
 
         server_config = dedicated_servers[source_host_name] or {}
         labels = server_config.get("labels", {}) or {}
-        public_ip = normalize_public_ip(labels.get("ip") or server_config.get("ip"))
-        service_name = labels.get("service_name") or server_config.get("service_name")
+        raw_public_ip = labels.get("ip") or server_config.get("ip")
+        raw_service_name = labels.get("service_name") or server_config.get("service_name")
+        public_ip = normalize_public_ip(raw_public_ip)
+        service_name = clean_wrapped_quotes(raw_service_name) if raw_service_name else None
 
         if not public_ip and not service_name:
             fail(
@@ -131,4 +141,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

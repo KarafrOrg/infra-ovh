@@ -1,0 +1,103 @@
+name: OpenStack maintenance - upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Terraform live environment directory under live/
+        required: true
+        default: karafra-net
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    env:
+      TFVARS_PATH: live/${{ github.event.inputs.environment || 'karafra-net' }}/terraform.auto.tfvars
+      ANSIBLE_CONFIG: ansible/ansible.cfg
+      OPENSTACK_KOLLA_PASSWORDS_PATH: ${{ github.workspace }}/ansible/.kolla/config/passwords.yml
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_RESOURCE_ID }}
+          service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Materialize Octavia client cert and key
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-client-cert-and-key-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client.cert-and-key.pem
+
+      - name: Materialize Octavia client CA cert
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-client-ca-cert-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client_ca.cert.pem
+
+      - name: Materialize Octavia server CA cert
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-cert-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.cert.pem
+
+      - name: Materialize Octavia server CA key
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-key-pem
+          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.key.pem
+
+      - name: Materialize Octavia CA passphrase env
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-octavia-server-ca-passphrase
+          env-name: OPENSTACK_KOLLA_OCTAVIA_CA_PASSWORD
+
+      - name: Materialize Prometheus remote write URL
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-prom-remote-write-url
+          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_URL
+
+      - name: Materialize Prometheus remote write password
+        uses: ./.github/actions/materialize-secret
+        with:
+          secret-name: openstack-prom-remote-write-password
+          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_PASSWORD
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Ansible dependencies
+        # language=bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ansible/requirements.txt
+        shell: bash
+
+      - name: Configure SSH key
+        uses: ./.github/actions/setup-ssh-key
+        with:
+          secret-name: ovh-vps-ssh-private-key
+
+      - name: Upgrade OpenStack
+        # language=bash
+        run: |
+          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/prepare-hosts.yml --private-key ~/.ssh/id_ed25519
+          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml \
+            --private-key ~/.ssh/id_ed25519 \
+            -e '{"openstack_kolla_commands":["pull","upgrade","post-deploy"]}'
+        shell: bash

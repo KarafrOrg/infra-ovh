@@ -1,0 +1,23 @@
+---
+# Manage a Cloudflare tunnel on the primary network node.
+#
+# Required extra-vars:
+#   cloudflare_tunnel_name        - logical name for the tunnel (used as container suffix)
+#   cloudflare_tunnel_state       - present | absent
+#   cloudflare_tunnel_mode        - token | quick
+#   cloudflare_tunnel_token       - CF named-tunnel token (required when mode=token, state=present)
+#   cloudflare_tunnel_origin_url  - origin URL (required when mode=quick)
+#
+# Optional extra-vars:
+#   cloudflare_tunnel_image       - container image (default: cloudflare/cloudflared:latest)
+#   cloudflare_tunnel_target_host - host to run the tunnel on (default: first network node)
+
+- name: Manage Cloudflare tunnel
+  hosts: network
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Apply cloudflare-tunnel role on primary network node
+      ansible.builtin.include_role:
+        name: cloudflare-tunnel
+      when: inventory_hostname == groups['network'][0]

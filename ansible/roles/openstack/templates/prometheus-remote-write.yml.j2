@@ -1,16 +1,74 @@
 global:
   scrape_interval: "{{ openstack_kolla_prometheus_scrape_interval }}"
 
+{% if openstack_kolla_prometheus_remote_write_url | length > 0 and openstack_kolla_prometheus_remote_write_username | length > 0 and openstack_kolla_prometheus_remote_write_password | length > 0 %}
 remote_write:
   - url: "{{ openstack_kolla_prometheus_remote_write_url }}"
     basic_auth:
       username: "{{ openstack_kolla_prometheus_remote_write_username }}"
       password: "{{ openstack_kolla_prometheus_remote_write_password }}"
+{% endif %}
 
 scrape_configs:
   - job_name: node
     static_configs:
       - targets:
 {% for target in openstack_kolla_prometheus_node_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: cadvisor
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_cadvisor_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_server_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: alertmanager
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_alertmanager_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: openstack_exporter
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_openstack_exporter_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: blackbox_exporter
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_blackbox_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: memcached_exporter
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_memcached_exporter_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: mysqld_exporter
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_mysqld_exporter_targets %}
+          - "{{ target }}"
+{% endfor %}
+
+  - job_name: libvirt_exporter
+    static_configs:
+      - targets:
+{% for target in openstack_kolla_prometheus_libvirt_exporter_targets %}
           - "{{ target }}"
 {% endfor %}

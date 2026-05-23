@@ -24,10 +24,17 @@
         state: present
         update_cache: true
 
-    - name: Ensure openvswitch kernel module is loaded
-      community.general.modprobe:
-        name: openvswitch
+    - name: Ensure Cinder host dependencies are installed
+      ansible.builtin.apt:
+        name:
+          - lvm2
+          - open-iscsi
         state: present
+        update_cache: true
+
+    - name: Ensure openvswitch kernel module is loaded
+      ansible.builtin.command: modprobe openvswitch
+      changed_when: false
 
     - name: Ensure Python Docker SDK is installed on target hosts
       ansible.builtin.apt:
@@ -41,35 +48,92 @@
         state: present
         update_cache: true
 
-    - name: Ensure Docker-related packages are not held
-      ansible.builtin.dpkg_selections:
+    - name: Remove all existing containers before Kolla bootstrap
+      ansible.builtin.shell: |
+        ids=$(docker ps -aq)
+        if [ -n "$ids" ]; then
+          docker rm -f $ids
+        fi
+      args:
+        executable: /bin/bash
+      changed_when: false
+      failed_when: false
+
+    - name: Stop host LB services if present
+      ansible.builtin.systemd:
         name: "{{ item }}"
-        selection: install
+        state: stopped
+        enabled: false
       loop:
-        - docker.io
+        - haproxy
+        - keepalived
+        - proxysql
+      failed_when: false
+
+    - name: Stop host MySQL/MariaDB services if present
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - mariadb
+        - mysql
+      failed_when: false
+
+    - name: Stop host Memcached service if present
+      ansible.builtin.systemd:
+        name: memcached
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Free Kolla precheck ports if occupied
+      ansible.builtin.shell: |
+        for p in 1984 3306 11211; do
+          ss -ltnp | awk '$4 ~ /:'"$p"'$/ {print $NF}' | sed -E 's/.*pid=([0-9]+).*/\1/' | xargs -r kill -9
+        done
+      args:
+        executable: /bin/bash
+      failed_when: false
+      changed_when: false
+
+    - name: Stop Docker services before state reset
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - docker
+        - docker.socket
         - containerd
-        - runc
+      failed_when: false
 
-    - name: Ensure Docker engine is installed on target hosts
-      ansible.builtin.apt:
-        name:
-          - docker.io
-          - containerd
-          - runc
-        state: present
-        update_cache: true
-        allow_change_held_packages: true
+    - name: Ensure Docker units are not masked
+      ansible.builtin.command: systemctl unmask {{ item }}
+      loop:
+        - docker
+        - docker.service
+        - docker.socket
+      changed_when: false
+      failed_when: false
 
-    - name: Ensure Docker service is enabled and running
+    - name: Remove stale Docker data directory
+      ansible.builtin.file:
+        path: /var/lib/docker
+        state: absent
+      failed_when: false
+
+    - name: Ensure Docker service is started when available
       ansible.builtin.systemd:
         name: docker
         enabled: true
         state: started
+      failed_when: false
 
-    - name: Wait for Docker socket to be available
-      ansible.builtin.wait_for:
-        path: /var/run/docker.sock
-        timeout: 30
+    - name: Ensure iSCSI service is enabled and running
+      ansible.builtin.systemd:
+        name: iscsid
+        enabled: true
+        state: started
 
 - name: Deploy minimal OpenStack with Kolla-Ansible
   hosts: localhost

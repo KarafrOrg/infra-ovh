@@ -25,7 +25,7 @@
 {% endfor %}
 
 [deployment]
-localhost ansible_connection=local
+{{ openstack_kolla_controller_host }}
 
 [bifrost:children]
 deployment
@@ -119,8 +119,36 @@ monitoring
 [prometheus-libvirt-exporter:children]
 compute
 
+[redis:children]
+control
+
+[valkey:children]
+control
+
+[octavia:children]
+control
+
+[octavia-api:children]
+octavia
+
+[octavia-driver-agent:children]
+octavia
+
+[octavia-health-manager:children]
+octavia
+
+[octavia-housekeeping:children]
+octavia
+
+[octavia-worker:children]
+octavia
+
 [cron:children]
 common
+
+[iscsid:children]
+compute
+storage
 
 [fluentd:children]
 common
@@ -200,6 +228,18 @@ neutron
 
 [neutron-metering-agent:children]
 neutron
+
+[cinder-api:children]
+control
+
+[cinder-scheduler:children]
+control
+
+[cinder-volume:children]
+storage
+
+[cinder-backup:children]
+storage
 
 [ironic-neutron-agent:children]
 neutron

@@ -1,0 +1,38 @@
+name: Setup SSH key
+description: Configure the runner with an Ansible SSH private key and relaxed host checking
+
+inputs:
+  private-key:
+    description: SSH private key content (provide either this or secret-name, not both)
+    required: false
+  secret-name:
+    description: GCP Secret Manager secret name containing the SSH private key (requires gcloud authentication in a prior step)
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install SSH key
+      shell: bash
+      env:
+        PRIVATE_KEY: ${{ inputs.private-key }}
+        SECRET_NAME: ${{ inputs.secret-name }}
+      # language=bash
+      run: |
+        if [[ -z "$PRIVATE_KEY" && -z "$SECRET_NAME" ]]; then
+          echo "Either private-key or secret-name input is required." >&2
+          exit 1
+        fi
+
+        if [[ -n "$SECRET_NAME" ]]; then
+          PRIVATE_KEY="$(gcloud secrets versions access latest --secret="$SECRET_NAME")"
+        fi
+
+        install -d -m 700 ~/.ssh
+        printf '%s\n' "$PRIVATE_KEY" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        cat > ~/.ssh/config <<'CFG'
+        Host *
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+        CFG
