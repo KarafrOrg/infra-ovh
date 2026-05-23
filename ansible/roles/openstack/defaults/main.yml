@@ -40,7 +40,7 @@ openstack_kolla_enable_cinder_backend_lvm: true
 openstack_kolla_enable_cinder_backup: false
 openstack_kolla_enable_fluentd: true
 openstack_kolla_enable_keepalived: true
-openstack_kolla_enable_proxysql: true
+openstack_kolla_enable_proxysql: false
 openstack_kolla_enable_haproxy: false
 openstack_kolla_cinder_volume_group: "cinder-volumes"
 openstack_kolla_prometheus_scrape_interval: "30s"

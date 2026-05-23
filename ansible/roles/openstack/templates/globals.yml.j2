@@ -14,6 +14,8 @@ kolla_external_vip_address: "{{ openstack_kolla_external_vip_address }}"
 node_custom_config: "{{ openstack_kolla_node_custom_config_dir }}"
 
 enable_horizon: "{{ openstack_kolla_enable_horizon | ternary('yes', 'no') }}"
+enable_haproxy: "{{ openstack_kolla_enable_haproxy | ternary('yes', 'no') }}"
+enable_proxysql: "{{ openstack_kolla_enable_proxysql | ternary('yes', 'no') }}"
 enable_prometheus: "{{ openstack_kolla_enable_prometheus | ternary('yes', 'no') }}"
 enable_grafana: "{{ openstack_kolla_enable_grafana | ternary('yes', 'no') }}"
 enable_prometheus_openstack_network_exporter: "{{ openstack_kolla_enable_prometheus_openstack_network_exporter | ternary('yes', 'no') }}"
