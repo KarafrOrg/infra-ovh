@@ -3,6 +3,8 @@
   hosts: ovh_dedicated_servers
   become: true
   gather_facts: false
+  vars:
+    openstack_kolla_reset_host_runtime: "{{ (lookup('env', 'OPENSTACK_KOLLA_RESET_HOST_RUNTIME') | default('false', true)) | bool }}"
 
   pre_tasks:
     - name: Ensure Python 3 is available on target hosts
@@ -58,6 +60,7 @@
         executable: /bin/bash
       changed_when: false
       failed_when: false
+      when: openstack_kolla_reset_host_runtime
 
     - name: Stop host LB services if present
       ansible.builtin.systemd:
@@ -106,6 +109,7 @@
         - docker.socket
         - containerd
       failed_when: false
+      when: openstack_kolla_reset_host_runtime
 
     - name: Ensure Docker units are not masked
       ansible.builtin.command: systemctl unmask {{ item }}
@@ -115,12 +119,14 @@
         - docker.socket
       changed_when: false
       failed_when: false
+      when: openstack_kolla_reset_host_runtime
 
     - name: Remove stale Docker data directory
       ansible.builtin.file:
         path: /var/lib/docker
         state: absent
       failed_when: false
+      when: openstack_kolla_reset_host_runtime
 
     - name: Ensure Docker service is started when available
       ansible.builtin.systemd:
@@ -128,6 +134,7 @@
         enabled: true
         state: started
       failed_when: false
+      when: openstack_kolla_reset_host_runtime
 
     - name: Ensure iSCSI service is enabled and running
       ansible.builtin.systemd:

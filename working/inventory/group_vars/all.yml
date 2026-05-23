@@ -1,0 +1,40 @@
+---
+openstack_kolla_prometheus_scrape_interval: "30s"
+
+openstack_kolla_prometheus_remote_write_url: "https://prometheus-prod-24-prod-eu-west-2.grafana.net/api/prom/push"
+openstack_kolla_prometheus_remote_write_username: "2220727"
+openstack_kolla_prometheus_remote_write_password: "glc_eyJvIjoiMTMyNzUxMSIsIm4iOiJzdGFjay0xMTQ4MjQyLWFsbG95LW9wZW5zdGFjay1wbGF0Zm9ybSIsImsiOiI5eW1MODA1MzAwWXM2Qks5T0s3elZRR2EiLCJtIjp7InIiOiJwcm9kLWV1LXdlc3QtMiJ9fQ=="
+
+openstack_kolla_prometheus_node_targets:
+  - "10.200.0.1:9100"
+  - "10.200.0.2:9100"
+
+openstack_kolla_prometheus_cadvisor_targets:
+  - "10.200.0.1:18080"
+  - "10.200.0.2:18080"
+
+openstack_kolla_prometheus_server_targets:
+  - "10.200.0.1:9091"
+
+openstack_kolla_prometheus_alertmanager_targets:
+  - "10.200.0.1:9093"
+
+openstack_kolla_prometheus_openstack_exporter_targets:
+  - "10.200.0.1:9198"
+
+openstack_kolla_prometheus_blackbox_targets:
+  - "10.200.0.1:9115"
+
+openstack_kolla_prometheus_memcached_exporter_targets:
+  - "10.200.0.1:9150"
+
+openstack_kolla_prometheus_mysqld_exporter_targets:
+  - "10.200.0.1:9104"
+
+openstack_kolla_prometheus_libvirt_exporter_targets:
+  - "10.200.0.2:9177"
+
+# Work around missing /usr/bin/healthcheck.sh in current mariadb image by using the mariadb client.
+mariadb_healthcheck_test:
+  - "CMD-SHELL"
+  - "mariadb --defaults-file=/etc/mysql/healthcheck.cnf -Nse 'SELECT 1'"

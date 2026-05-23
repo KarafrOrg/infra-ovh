@@ -1,7 +1,8 @@
 ---
 openstack_kolla_target_group: ovh_dedicated_servers
 openstack_kolla_work_dir: "{{ (lookup('env', 'GITHUB_WORKSPACE') | default('', true)) | ternary(lookup('env', 'GITHUB_WORKSPACE') ~ '/ansible/.kolla', playbook_dir ~ '/../.kolla') }}"
-openstack_kolla_config_dir: "{{ openstack_kolla_work_dir }}/config"
+openstack_kolla_config_dir: "{{ (lookup('env', 'GITHUB_WORKSPACE') | default('', true)) | ternary(lookup('env', 'GITHUB_WORKSPACE') ~ '/ansible/etc/kolla', playbook_dir ~ '/../etc/kolla') }}"
+openstack_kolla_node_custom_config_dir: "{{ openstack_kolla_config_dir }}/config"
 openstack_kolla_inventory_path: "{{ openstack_kolla_work_dir }}/multinode"
 openstack_kolla_passwords_path: "{{ lookup('env', 'OPENSTACK_KOLLA_PASSWORDS_PATH') | default(openstack_kolla_config_dir ~ '/passwords.yml', true) }}"
 openstack_kolla_venv_path: "{{ openstack_kolla_work_dir }}/venv"

@@ -27,7 +27,7 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     name: Deploy OpenStack minimal cluster (controller + compute)
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 360
     env:
       ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}
       TFVARS_PATH: live/${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}/terraform.auto.tfvars
@@ -40,7 +40,7 @@ jobs:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
+        uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_RESOURCE_ID }}
           service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
@@ -130,7 +130,7 @@ jobs:
         # language=bash
         run: |
           set -euo pipefail
-          passwords_path="${GITHUB_WORKSPACE}/ansible/.kolla/config/passwords.yml"
+          passwords_path="${GITHUB_WORKSPACE}/ansible/etc/kolla/passwords.yml"
 
           mkdir -p "$(dirname "${passwords_path}")"
           gcloud secrets versions access latest --secret="openstack-passwords-yaml" > "${passwords_path}"
@@ -143,25 +143,25 @@ jobs:
         uses: ./.github/actions/materialize-secret
         with:
           secret-name: openstack-octavia-client-cert-and-key-pem
-          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client.cert-and-key.pem
+          destination-path: ${{ github.workspace }}/ansible/etc/kolla/config/octavia/client.cert-and-key.pem
 
       - name: Materialize Octavia client CA cert
         uses: ./.github/actions/materialize-secret
         with:
           secret-name: openstack-octavia-client-ca-cert-pem
-          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/client_ca.cert.pem
+          destination-path: ${{ github.workspace }}/ansible/etc/kolla/config/octavia/client_ca.cert.pem
 
       - name: Materialize Octavia server CA cert
         uses: ./.github/actions/materialize-secret
         with:
           secret-name: openstack-octavia-server-ca-cert-pem
-          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.cert.pem
+          destination-path: ${{ github.workspace }}/ansible/etc/kolla/config/octavia/server_ca.cert.pem
 
       - name: Materialize Octavia server CA key
         uses: ./.github/actions/materialize-secret
         with:
           secret-name: openstack-octavia-server-ca-key-pem
-          destination-path: ${{ github.workspace }}/ansible/.kolla/config/octavia/server_ca.key.pem
+          destination-path: ${{ github.workspace }}/ansible/etc/kolla/config/octavia/server_ca.key.pem
 
       - name: Materialize Octavia CA passphrase env
         uses: ./.github/actions/materialize-secret

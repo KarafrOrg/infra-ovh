@@ -1,0 +1,15 @@
+[Interface]
+Address = {{ wireguard_address }}
+ListenPort = {{ wireguard_port | default(51820) }}
+PrivateKey = {{ wireguard_private_key }}
+SaveConfig = false
+
+{% for peer in groups['baremetal'] if peer != inventory_hostname %}
+[Peer]
+PublicKey = {{ hostvars[peer].wireguard_public_key }}
+AllowedIPs = {{ (hostvars[peer].wireguard_address | split('/'))[0] }}/32
+Endpoint = {{ hostvars[peer].ansible_host }}:{{ hostvars[peer].wireguard_port | default(51820) }}
+PersistentKeepalive = 25
+
+{% endfor %}
+

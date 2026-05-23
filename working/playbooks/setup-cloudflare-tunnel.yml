@@ -1,0 +1,11 @@
+---
+- name: Setup Cloudflare tunnel for Horizon
+  hosts: network
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Run Cloudflare tunnel role on primary network node
+      ansible.builtin.include_role:
+        name: cloudflare-horizon
+      when: inventory_hostname == groups['network'][0]
+

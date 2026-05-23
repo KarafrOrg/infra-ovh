@@ -71,8 +71,9 @@
     - "{{ openstack_kolla_work_dir }}"
     - "{{ openstack_kolla_tool_shim_dir }}"
     - "{{ openstack_kolla_config_dir }}"
-    - "{{ openstack_kolla_config_dir }}/octavia"
-    - "{{ openstack_kolla_config_dir }}/prometheus/prometheus.yml.d"
+    - "{{ openstack_kolla_node_custom_config_dir }}"
+    - "{{ openstack_kolla_node_custom_config_dir }}/octavia"
+    - "{{ openstack_kolla_node_custom_config_dir }}/prometheus/prometheus.yml.d"
 
 - name: Install readlink compatibility shim for kolla-ansible
   ansible.builtin.copy:
@@ -120,7 +121,7 @@
 - name: Render Prometheus remote_write extension
   ansible.builtin.template:
     src: prometheus-remote-write.yml.j2
-    dest: "{{ openstack_kolla_config_dir }}/prometheus/prometheus.yml.d/10-remote-write.yml"
+    dest: "{{ openstack_kolla_node_custom_config_dir }}/prometheus/prometheus.yml.d/10-remote-write.yml"
     mode: "0644"
 
 - name: Check that Kolla passwords file is present

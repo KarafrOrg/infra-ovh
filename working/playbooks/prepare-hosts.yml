@@ -1,0 +1,93 @@
+---
+- name: Prepare hosts for containerized OpenStack services
+  hosts: compute
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Stop host libvirt daemons that conflict with nova_libvirt container
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: stopped
+        enabled: false
+      loop:
+        - libvirtd
+        - libvirtd.socket
+        - virtqemud
+        - virtqemud.socket
+      failed_when: false
+
+    - name: Remove stale libvirt socket if present
+      ansible.builtin.file:
+        path: /var/run/libvirt/libvirt-sock
+        state: absent
+
+    - name: Kill orphaned libvirtd process left behind by failed runs
+      ansible.builtin.shell: |
+        pgrep -f '/usr/sbin/libvirtd --listen' | xargs -r kill -9
+      args:
+        executable: /bin/bash
+      failed_when: false
+
+    - name: Remove stale libvirtd pidfiles
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /run/libvirtd.pid
+        - /var/run/libvirtd.pid
+
+    - name: Check if stale nova_libvirt container exists
+      ansible.builtin.command: docker ps -a --filter name=^/nova_libvirt$ --format '{{"{{.ID}}"}}'
+      register: nova_libvirt_container_id
+      changed_when: false
+
+    - name: Remove stale nova_libvirt container before redeploy
+      ansible.builtin.command: docker rm -f nova_libvirt
+      when: nova_libvirt_container_id.stdout | trim != ""
+
+- name: Prepare control node for MariaDB container lifecycle
+  hosts: mariadb
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Check if stale mariadb container exists
+      ansible.builtin.command: docker ps -a --filter name=^/mariadb$ --format '{{"{{.ID}}"}}'
+      register: mariadb_container_id
+      changed_when: false
+
+    - name: Remove stale mariadb container name before Kolla deploy
+      ansible.builtin.command: docker rm -f mariadb
+      when: mariadb_container_id.stdout | trim != ""
+
+- name: Prepare Open vSwitch hosts for containerized OVS
+  hosts: openvswitch
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Stop host Open vSwitch service that can conflict with Kolla OVS containers
+      ansible.builtin.systemd:
+        name: openvswitch-switch
+        state: stopped
+        enabled: false
+      failed_when: false
+
+    - name: Remove stale Open vSwitch runtime files
+      ansible.builtin.shell: |
+        rm -f /run/openvswitch/*.pid /run/openvswitch/*.ctl /run/openvswitch/db.sock
+        rm -f /var/run/openvswitch/*.pid /var/run/openvswitch/*.ctl /var/run/openvswitch/db.sock
+      args:
+        executable: /bin/bash
+      changed_when: false
+
+    - name: Check if stale openvswitch_db container exists
+      ansible.builtin.command: docker ps -a --filter name=^/openvswitch_db$ --format '{{"{{.ID}}"}}'
+      register: openvswitch_db_container_id
+      changed_when: false
+
+    - name: Remove stale openvswitch_db container name before Kolla deploy
+      ansible.builtin.command: docker rm -f openvswitch_db
+      when: openvswitch_db_container_id.stdout | trim != ""
+
+
+
+
