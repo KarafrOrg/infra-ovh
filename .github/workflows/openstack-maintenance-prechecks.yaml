@@ -96,10 +96,13 @@ jobs:
         with:
           secret-name: ovh-vps-ssh-private-key
 
-      - name: Run prechecks
+      - name: Prepare Kolla-Ansible config and inventory
         # language=bash
         run: |
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml \
-            --private-key ~/.ssh/id_ed25519 \
-            -e '{"openstack_kolla_commands":["prechecks"]}'
+          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml --private-key ~/.ssh/id_ed25519
         shell: bash
+
+      - name: Run Kolla-Ansible prechecks
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: prechecks

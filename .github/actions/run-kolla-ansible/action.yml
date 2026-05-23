@@ -1,0 +1,81 @@
+name: Run Kolla-Ansible command
+description: Execute one kolla-ansible command with shared config/inventory/passwords and tee logs
+
+inputs:
+  command:
+    description: Kolla-Ansible command to run (e.g. deploy, prechecks, reconfigure)
+    required: true
+  extra-args:
+    description: Optional additional CLI arguments to place before the command
+    required: false
+    default: ""
+  kolla-cmd:
+    description: Path to kolla-ansible executable
+    required: false
+    default: ""
+  configdir:
+    description: Kolla config directory
+    required: false
+    default: ""
+  inventory:
+    description: Kolla inventory path
+    required: false
+    default: ""
+  passwords-path:
+    description: Kolla passwords file path
+    required: false
+    default: ""
+  log-file:
+    description: Optional explicit log file path
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Run kolla-ansible
+      shell: bash
+      # language=bash
+      run: |
+        set -euo pipefail
+
+        kolla_cmd="${{ inputs.kolla-cmd }}"
+        configdir="${{ inputs.configdir }}"
+        inventory="${{ inputs.inventory }}"
+        passwords_path="${{ inputs.passwords-path }}"
+        extra_args="${{ inputs.extra-args }}"
+        command_name="${{ inputs.command }}"
+        log_file="${{ inputs.log-file }}"
+
+        if [[ -z "$kolla_cmd" ]]; then
+          kolla_cmd="${GITHUB_WORKSPACE}/ansible/.kolla/venv/bin/kolla-ansible"
+        fi
+        if [[ -z "$configdir" ]]; then
+          configdir="${GITHUB_WORKSPACE}/ansible/etc/kolla"
+        fi
+        if [[ -z "$inventory" ]]; then
+          inventory="${GITHUB_WORKSPACE}/ansible/.kolla/multinode"
+        fi
+        if [[ -z "$passwords_path" ]]; then
+          passwords_path="${OPENSTACK_KOLLA_PASSWORDS_PATH:-${GITHUB_WORKSPACE}/ansible/etc/kolla/passwords.yml}"
+        fi
+        if [[ -z "$log_file" ]]; then
+          safe_cmd="$(echo "$command_name" | tr '[:space:]' '-')"
+          log_file="${GITHUB_WORKSPACE}/ansible/.kolla/kolla-${safe_cmd}.log"
+        fi
+
+        args=(
+          --configdir "$configdir"
+          --inventory "$inventory"
+          --passwords "$passwords_path"
+        )
+
+        if [[ -n "$extra_args" ]]; then
+          read -r -a extra <<< "$extra_args"
+          args+=("${extra[@]}")
+        fi
+
+        args+=("$command_name")
+
+        echo ">>> Running kolla-ansible ${command_name} (log: ${log_file})"
+        stdbuf -oL -eL "$kolla_cmd" "${args[@]}" 2>&1 | tee "$log_file"

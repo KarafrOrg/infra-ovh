@@ -177,7 +177,34 @@ jobs:
           set -euo pipefail
           export VIRTUAL_ENV="${pythonLocation}"
           export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
           ansible-playbook \
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/openstack-kolla-minimal.yml \
             --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"
+
+      - name: Run Kolla-Ansible bootstrap-servers
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: bootstrap-servers
+
+      - name: Run Kolla-Ansible prechecks
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: prechecks
+
+      - name: Run Kolla-Ansible pull
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: pull
+
+      - name: Run Kolla-Ansible deploy
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: deploy
+
+      - name: Run Kolla-Ansible post-deploy
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: post-deploy
+

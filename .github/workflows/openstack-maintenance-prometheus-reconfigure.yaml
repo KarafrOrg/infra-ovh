@@ -98,3 +98,11 @@ jobs:
         run: |
           ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/setup-prometheus.yml --private-key ~/.ssh/id_ed25519
         shell: bash
+
+      - name: Run Kolla-Ansible reconfigure (prometheus)
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: reconfigure
+          extra-args: "--tags prometheus"
+          log-file: "${{ github.workspace }}/ansible/.kolla/kolla-reconfigure-prometheus.log"
+

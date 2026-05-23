@@ -207,23 +207,3 @@
     PATH: "{{ openstack_kolla_exec_path }}"
     VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
   when: openstack_kolla_install_deps | bool
-
-- name: Run Kolla-Ansible deployment lifecycle
-  ansible.builtin.shell: |
-    set -o pipefail
-    log_file="{{ openstack_kolla_work_dir }}/kolla-{{ item }}.log"
-    echo ">>> Running kolla-ansible {{ item }} (log: ${log_file})"
-    stdbuf -oL -eL "{{ openstack_kolla_ansible_cmd }}" \
-      --configdir "{{ openstack_kolla_config_dir }}" \
-      --inventory "{{ openstack_kolla_inventory_path }}" \
-      --passwords "{{ openstack_kolla_passwords_path }}" \
-      {{ openstack_kolla_extra_args }} \
-      "{{ item }}" 2>&1 | tee "${log_file}"
-  args:
-    executable: /bin/bash
-  environment:
-    PATH: "{{ openstack_kolla_exec_path }}"
-    VIRTUAL_ENV: "{{ openstack_kolla_venv_path }}"
-  loop: "{{ openstack_kolla_commands }}"
-  loop_control:
-    label: "{{ item }}"

@@ -97,7 +97,21 @@ jobs:
         # language=bash
         run: |
           ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/prepare-hosts.yml --private-key ~/.ssh/id_ed25519
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml \
-            --private-key ~/.ssh/id_ed25519 \
-            -e '{"openstack_kolla_commands":["pull","upgrade","post-deploy"]}'
+          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml --private-key ~/.ssh/id_ed25519
         shell: bash
+
+      - name: Run Kolla-Ansible pull
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: pull
+
+      - name: Run Kolla-Ansible upgrade
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: upgrade
+
+      - name: Run Kolla-Ansible post-deploy
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: post-deploy
+
