@@ -20,6 +20,7 @@
       - hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface is defined
       - hostvars[openstack_kolla_controller_host].wireguard_address is defined
     fail_msg: "Controller host facts are incomplete. Run wireguard playbook first and ensure facts are available."
+  when: openstack_kolla_needs_network_facts | bool
 
 - name: Compute derived Kolla networking values
   ansible.builtin.set_fact:
@@ -28,6 +29,14 @@
     openstack_kolla_wireguard_host_ips: "{{ openstack_kolla_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
     openstack_kolla_controller_wireguard_ip: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '') }}"
     openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
+  when: openstack_kolla_needs_network_facts | bool
+
+- name: Derive wireguard IPs from inventory (always available, no remote facts needed)
+  ansible.builtin.set_fact:
+    openstack_kolla_wireguard_host_ips: "{{ openstack_kolla_wireguard_host_ips | default(openstack_kolla_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list) }}"
+    openstack_kolla_controller_wireguard_ip: "{{ openstack_kolla_controller_wireguard_ip | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) }}"
+    openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_wireguard_ips | default(openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list) }}"
+    openstack_kolla_wireguard_prefix: "{{ openstack_kolla_wireguard_prefix | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '')) }}"
 
 - name: Derive Prometheus target endpoints from discovered hosts
   ansible.builtin.set_fact:
@@ -45,6 +54,7 @@
   ansible.builtin.set_fact:
     openstack_kolla_internal_vip_address: "{{ openstack_kolla_internal_vip_override if openstack_kolla_internal_vip_override | length > 0 else ((hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) if openstack_kolla_use_controller_ip_as_vip | bool else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_internal_vip_host_octet)) }}"
     openstack_kolla_external_vip_address: "{{ openstack_kolla_external_vip_override if openstack_kolla_external_vip_override | length > 0 else ((hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) if openstack_kolla_use_controller_ip_as_vip | bool else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_external_vip_host_octet)) }}"
+  when: openstack_kolla_needs_network_facts | bool
 
 - name: Validate Kolla VIP addresses are free in WireGuard subnet
   ansible.builtin.assert:
@@ -52,6 +62,7 @@
       - (openstack_kolla_internal_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_internal_vip_address == (hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')))
       - (openstack_kolla_external_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_external_vip_address == (hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')))
     fail_msg: "Computed Kolla VIP collides with host WireGuard IPs: {{ openstack_kolla_wireguard_host_ips }}"
+  when: openstack_kolla_needs_network_facts | bool
 
 - name: Ensure Kolla working directories exist
   ansible.builtin.file:
