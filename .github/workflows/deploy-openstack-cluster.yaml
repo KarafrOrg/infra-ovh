@@ -139,20 +139,6 @@ jobs:
           secret-name: openstack-octavia-server-ca-passphrase
           env-name: OPENSTACK_KOLLA_OCTAVIA_CA_PASSWORD
 
-      - name: Deploy OpenStack cluster with Kolla-Ansible
-        env:
-          ANSIBLE_CONFIG: ansible/ansible.cfg
-        # language=bash
-        run: |
-          set -euo pipefail
-          export VIRTUAL_ENV="${pythonLocation}"
-          export PATH="${VIRTUAL_ENV}/bin:${PATH}"
-
-          ansible-playbook \
-            -i ansible/scripts/inventory_from_tfvars.py \
-            ansible/playbooks/openstack-kolla-minimal.yml \
-            --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"
-
       - name: Run Kolla-Ansible install-deps
         uses: ./.github/actions/run-kolla-ansible
         with:
@@ -187,3 +173,23 @@ jobs:
         with:
           command: post-deploy
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_post_deploy }}
+
+      - name: Collect MariaDB diagnostics on failure
+        if: ${{ failure() }}
+        env:
+          ANSIBLE_CONFIG: ansible/ansible.cfg
+        # language=bash
+        run: |
+          set -euo pipefail
+          export VIRTUAL_ENV="${pythonLocation}"
+          export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
+          echo "=== docker ps (mariadb/proxysql) ==="
+          ansible mariadb -i ansible/.kolla/multinode --private-key "${ANSIBLE_PRIVATE_KEY_FILE}" -b -m shell -a 'docker ps -a --format "{{.Names}} {{.Status}}" | egrep "^(mariadb|proxysql) " || true' || true
+
+          echo "=== mariadb logs (last 200 lines) ==="
+          ansible mariadb -i ansible/.kolla/multinode --private-key "${ANSIBLE_PRIVATE_KEY_FILE}" -b -m shell -a 'docker logs --tail 200 mariadb || true' || true
+
+          echo "=== mariadb health status ==="
+          ansible mariadb -i ansible/.kolla/multinode --private-key "${ANSIBLE_PRIVATE_KEY_FILE}" -b -m shell -a 'docker inspect mariadb --format "{{json .State.Health}}" || true' || true
+

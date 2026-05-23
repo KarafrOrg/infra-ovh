@@ -11,33 +11,6 @@
       ansible.builtin.raw: test -x /usr/bin/python3 || (apt-get update && apt-get install -y python3)
       changed_when: false
 
-    - name: Gather facts
-      ansible.builtin.setup:
-
-    - name: Ensure kernel extras are installed for current kernel
-      ansible.builtin.apt:
-        name: "linux-modules-extra-{{ ansible_kernel }}"
-        state: present
-        update_cache: true
-
-    - name: Ensure Open vSwitch userspace tools are installed on target hosts
-      ansible.builtin.apt:
-        name: openvswitch-switch
-        state: present
-        update_cache: true
-
-    - name: Ensure Cinder host dependencies are installed
-      ansible.builtin.apt:
-        name:
-          - lvm2
-          - open-iscsi
-        state: present
-        update_cache: true
-
-    - name: Ensure openvswitch kernel module is loaded
-      ansible.builtin.command: modprobe openvswitch
-      changed_when: false
-
     - name: Ensure Python Docker SDK is installed on target hosts
       ansible.builtin.apt:
         name: python3-docker
@@ -49,67 +22,6 @@
         name: python3-passlib
         state: present
         update_cache: true
-
-    - name: Remove all existing containers before Kolla bootstrap
-      ansible.builtin.shell: |
-        ids=$(docker ps -aq)
-        if [ -n "$ids" ]; then
-          docker rm -f $ids
-        fi
-      args:
-        executable: /bin/bash
-      changed_when: false
-      failed_when: false
-      when: openstack_kolla_reset_host_runtime
-
-    - name: Stop host LB services if present
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        state: stopped
-        enabled: false
-      loop:
-        - haproxy
-        - keepalived
-        - proxysql
-      failed_when: false
-
-    - name: Stop host MySQL/MariaDB services if present
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        state: stopped
-        enabled: false
-      loop:
-        - mariadb
-        - mysql
-      failed_when: false
-
-    - name: Stop host Memcached service if present
-      ansible.builtin.systemd:
-        name: memcached
-        state: stopped
-        enabled: false
-      failed_when: false
-
-    - name: Free Kolla precheck ports if occupied
-      ansible.builtin.shell: |
-        for p in 1984 3306 11211; do
-          ss -ltnp | awk '$4 ~ /:'"$p"'$/ {print $NF}' | sed -E 's/.*pid=([0-9]+).*/\1/' | xargs -r kill -9
-        done
-      args:
-        executable: /bin/bash
-      failed_when: false
-      changed_when: false
-
-    - name: Stop Docker services before state reset
-      ansible.builtin.systemd:
-        name: "{{ item }}"
-        state: stopped
-      loop:
-        - docker
-        - docker.socket
-        - containerd
-      failed_when: false
-      when: openstack_kolla_reset_host_runtime
 
     - name: Ensure Docker units are not masked
       ansible.builtin.command: systemctl unmask {{ item }}
