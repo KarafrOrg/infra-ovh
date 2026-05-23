@@ -2,5 +2,3 @@ ansible-core>=2.18,<2.20
 kolla-ansible>=21.0.0,<22.0.0
 netaddr>=0.10.1
 jmespath>=1.0.1
-
-
