@@ -56,7 +56,7 @@ jobs:
           service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
 
       - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
+        uses: google-github-actions/setup-gcloud@v3
 
       - name: Resolve Cloudflare token secret name
         id: resolve_secret
