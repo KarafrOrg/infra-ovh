@@ -118,6 +118,12 @@ runs:
         # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
         export PATH="${kolla_bindir}:${PATH}"
         export VIRTUAL_ENV="$(dirname "$kolla_bindir")"
+        if [[ -f "${GITHUB_WORKSPACE}/ansible/ansible.cfg" ]]; then
+          export ANSIBLE_CONFIG="${GITHUB_WORKSPACE}/ansible/ansible.cfg"
+        fi
+        # CI runners are ephemeral, so disable host key prompts for non-interactive SSH.
+        export ANSIBLE_HOST_KEY_CHECKING=False
+        export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${ANSIBLE_SSH_ARGS:-}"
 
         args=(
           "$command_name"
