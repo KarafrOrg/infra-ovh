@@ -1,7 +1,9 @@
-{% if openstack_kolla_prometheus_remote_write_url | length > 0 and openstack_kolla_prometheus_remote_write_username | length > 0 and openstack_kolla_prometheus_remote_write_password | length > 0 %}
+{% if openstack_kolla_prometheus_remote_write_url | length > 0 %}
 remote_write:
   - url: "{{ openstack_kolla_prometheus_remote_write_url }}"
+{% if openstack_kolla_prometheus_remote_write_username | length > 0 and openstack_kolla_prometheus_remote_write_password | length > 0 %}
     basic_auth:
       username: "{{ openstack_kolla_prometheus_remote_write_username }}"
       password: "{{ openstack_kolla_prometheus_remote_write_password }}"
+{% endif %}
 {% endif %}
