@@ -56,4 +56,4 @@ secrets/
 # GCP service account keys
 cred.json
 secrets.auto.tfvars
-ansible/venv
+ansible/.venv
