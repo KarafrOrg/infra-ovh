@@ -77,7 +77,20 @@ runs:
         fi
 
         if [[ -z "$kolla_cmd" ]]; then
-          kolla_cmd="${GITHUB_WORKSPACE}/ansible/.kolla/venv/bin/kolla-ansible"
+          for candidate in \
+            "${GITHUB_WORKSPACE}/ansible/.kolla/venv/bin/kolla-ansible" \
+            "${pythonLocation:-}/bin/kolla-ansible" \
+            "$(command -v kolla-ansible 2>/dev/null || true)"; do
+            if [[ -n "$candidate" && -x "$candidate" ]]; then
+              kolla_cmd="$candidate"
+              break
+            fi
+          done
+        fi
+        if [[ -z "$kolla_cmd" || ! -x "$kolla_cmd" ]]; then
+          echo "Unable to find executable kolla-ansible binary." >&2
+          echo "Tried .kolla venv, setup-python bin, and PATH." >&2
+          exit 127
         fi
         if [[ -z "$configdir" ]]; then
           configdir="${GITHUB_WORKSPACE}/ansible/etc/kolla"
@@ -87,6 +100,19 @@ runs:
         fi
         if [[ -z "$passwords_path" ]]; then
           passwords_path="${OPENSTACK_KOLLA_PASSWORDS_PATH:-${GITHUB_WORKSPACE}/ansible/etc/kolla/passwords.yml}"
+        fi
+        if [[ ! -d "$configdir" ]]; then
+          echo "Kolla config directory not found: $configdir" >&2
+          exit 2
+        fi
+        if [[ ! -f "$inventory" ]]; then
+          echo "Kolla inventory file not found: $inventory" >&2
+          echo "Generate it before running kolla-ansible commands." >&2
+          exit 2
+        fi
+        if [[ ! -f "$passwords_path" ]]; then
+          echo "Kolla passwords file not found: $passwords_path" >&2
+          exit 2
         fi
         kolla_bindir="$(dirname "$kolla_cmd")"
         # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
