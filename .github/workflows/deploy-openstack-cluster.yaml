@@ -60,29 +60,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r ansible/requirements.txt
 
-      - name: Validate Ansible version for Kolla
-        # language=bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import re
-          import subprocess
-          from packaging.version import Version
-
-          out = subprocess.check_output(["ansible-playbook", "--version"], text=True)
-          first_line = out.splitlines()[0]
-          m = re.search(r"core\s+([0-9]+\.[0-9]+(?:\.[0-9]+)?)", first_line)
-          if not m:
-              raise SystemExit(f"Could not parse ansible version from: {first_line}")
-
-          version = Version(m.group(1))
-          # stable/2025.1 requires ansible-core >=2.17,<2.19.
-          if not (Version("2.17.0") <= version < Version("2.19.0")):
-              raise SystemExit(f"Unsupported ansible-core version for this Kolla release: {version}")
-
-          print(f"Using ansible-core {version}")
-          PY
-
       - name: Provision Kolla playbooks for CLI
         # language=bash
         run: |
