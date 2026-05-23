@@ -104,5 +104,4 @@ jobs:
         with:
           command: reconfigure
           extra-args: "--tags prometheus"
-          log-file: "${{ github.workspace }}/ansible/.kolla/kolla-reconfigure-prometheus.log"
 

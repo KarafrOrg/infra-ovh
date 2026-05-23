@@ -25,10 +25,6 @@ inputs:
     description: Kolla passwords file path
     required: false
     default: ""
-  log-file:
-    description: Optional explicit log file path
-    required: false
-    default: ""
 
 runs:
   using: composite
@@ -45,7 +41,6 @@ runs:
         passwords_path="${{ inputs.passwords-path }}"
         extra_args="${{ inputs.extra-args }}"
         command_name="${{ inputs.command }}"
-        log_file="${{ inputs.log-file }}"
 
         if [[ -z "$kolla_cmd" ]]; then
           kolla_cmd="${GITHUB_WORKSPACE}/ansible/.kolla/venv/bin/kolla-ansible"
@@ -59,11 +54,6 @@ runs:
         if [[ -z "$passwords_path" ]]; then
           passwords_path="${OPENSTACK_KOLLA_PASSWORDS_PATH:-${GITHUB_WORKSPACE}/ansible/etc/kolla/passwords.yml}"
         fi
-        if [[ -z "$log_file" ]]; then
-          safe_cmd="$(echo "$command_name" | tr '[:space:]' '-')"
-          log_file="${GITHUB_WORKSPACE}/ansible/.kolla/kolla-${safe_cmd}.log"
-        fi
-
         kolla_bindir="$(dirname "$kolla_cmd")"
         # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
         export PATH="${kolla_bindir}:${PATH}"
@@ -82,5 +72,6 @@ runs:
 
         args+=("$command_name")
 
-        echo ">>> Running kolla-ansible ${command_name} (log: ${log_file})"
-        stdbuf -oL -eL "$kolla_cmd" "${args[@]}" 2>&1 | tee "$log_file"
+        echo "[INFO] Running kolla-ansible ${command_name}"
+        
+        "$kolla_cmd" "${args[@]}"
