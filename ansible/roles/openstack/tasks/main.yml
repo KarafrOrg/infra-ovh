@@ -17,19 +17,15 @@
 - name: Validate controller networking facts
   ansible.builtin.assert:
     that:
-      - hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface is defined
       - hostvars[openstack_kolla_controller_host].wireguard_address is defined
-    fail_msg: "Controller host facts are incomplete. Run wireguard playbook first and ensure facts are available."
-  when: openstack_kolla_needs_network_facts | bool
+    fail_msg: "Controller host is missing wireguard_address. Run wireguard playbook first and ensure inventory provides WireGuard addresses."
 
 - name: Compute derived Kolla networking values
   ansible.builtin.set_fact:
-    openstack_kolla_network_interface: "{{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface }}"
     openstack_kolla_wireguard_prefix: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '') }}"
     openstack_kolla_wireguard_host_ips: "{{ openstack_kolla_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
     openstack_kolla_controller_wireguard_ip: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '') }}"
     openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list }}"
-  when: openstack_kolla_needs_network_facts | bool
 
 - name: Derive wireguard IPs from inventory (always available, no remote facts needed)
   ansible.builtin.set_fact:
