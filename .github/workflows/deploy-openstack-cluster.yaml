@@ -76,7 +76,8 @@ jobs:
               raise SystemExit(f"Could not parse ansible version from: {first_line}")
 
           version = Version(m.group(1))
-          if not (Version("2.15.0") <= version < Version("2.17.0")):
+          # stable/2025.1 requires ansible-core >=2.17,<2.19.
+          if not (Version("2.17.0") <= version < Version("2.19.0")):
               raise SystemExit(f"Unsupported ansible-core version for this Kolla release: {version}")
 
           print(f"Using ansible-core {version}")
