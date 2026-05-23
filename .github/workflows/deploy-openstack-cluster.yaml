@@ -8,6 +8,26 @@ on:
         required: true
         default: karafra-net
         type: string
+      run_pre_checks:
+        description: "Whether to run Kolla-Ansible prechecks after deployment (will use --use-test-images option)"
+        required: true
+        type: boolean
+        default: true
+      run_image_pull:
+        description: "Whether to run Kolla-Ansible pull after deployment"
+        required: true
+        type: boolean
+        default: true
+      run_deploy:
+        description: "Whether to run Kolla-Ansible deploy after deployment"
+        required: true
+        type: boolean
+        default: true
+      run_post_deploy:
+        description: "Whether to run Kolla-Ansible post-deploy after deployment"
+        required: true
+        type: boolean
+        default: true
   workflow_run:
     workflows:
       - Configure WireGuard mesh
@@ -148,18 +168,22 @@ jobs:
         with:
           command: prechecks
           extra-args: '--use-test-images'
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_pre_checks }}
 
       - name: Run Kolla-Ansible pull
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: pull
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_image_pull }}
 
       - name: Run Kolla-Ansible deploy
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: deploy
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_deploy }}
 
       - name: Run Kolla-Ansible post-deploy
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: post-deploy
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_post_deploy }}
