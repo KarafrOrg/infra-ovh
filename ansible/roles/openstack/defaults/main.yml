@@ -13,8 +13,8 @@ openstack_kolla_manage_control_deps: true
 # Set to false in playbooks that only reconfigure services and don't render globals.yml.
 openstack_kolla_needs_network_facts: true
 openstack_kolla_pip_packages:
-  - ansible-core==2.15.13
-  - kolla-ansible>=18.0.0,<19.0.0
+  - ansible-core>=2.16,<2.18
+  - kolla-ansible>=19.0.0,<20.0.0
   - docker
   - passlib
 openstack_kolla_ansible_cmd: "{{ openstack_kolla_venv_path }}/bin/kolla-ansible"
