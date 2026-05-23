@@ -72,6 +72,6 @@ runs:
 
         args+=("$command_name")
 
-        echo "[INFO] Running kolla-ansible ${command_name}"
+        echo "Running kolla-ansible ${command_name}"
         
         "$kolla_cmd" "${args[@]}"

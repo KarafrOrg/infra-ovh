@@ -1,7 +1,0 @@
----
-cloudflare_tunnel_mode: token
-cloudflare_tunnel_token: ""
-cloudflare_tunnel_container_name: cloudflared_horizon
-cloudflare_tunnel_image: cloudflare/cloudflared:latest
-cloudflare_horizon_origin_url: http://10.200.0.1:80
-

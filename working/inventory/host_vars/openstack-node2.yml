@@ -1,5 +1,0 @@
-ansible_host: 54.36.168.182
-wireguard_address: 10.200.0.2/24
-wireguard_port: 51820
-external_interface: ens3
-
