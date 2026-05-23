@@ -13,11 +13,18 @@
 #   cloudflare_tunnel_target_host - host to run the tunnel on (default: first network node)
 
 - name: Manage Cloudflare tunnel
-  hosts: network
+  hosts: all
   gather_facts: false
   become: true
   tasks:
     - name: Apply cloudflare-tunnel role on primary network node
       ansible.builtin.include_role:
         name: cloudflare-tunnel
-      when: inventory_hostname == groups['network'][0]
+      vars:
+        cloudflare_tunnel_host_group: >-
+          {{ 'network' if ('network' in groups and groups['network'] | length > 0)
+             else 'ovh_dedicated_servers' }}
+      when:
+        - cloudflare_tunnel_host_group in groups
+        - groups[cloudflare_tunnel_host_group] | length > 0
+        - inventory_hostname == groups[cloudflare_tunnel_host_group][0]

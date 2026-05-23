@@ -95,10 +95,12 @@ jobs:
         # language=bash
         run: |
           set -euo pipefail
-          test -f ansible/.kolla/multinode || {
-            echo "Missing ansible/.kolla/multinode. Run bootstrap/deploy first." >&2
-            exit 1
-          }
+
+          inventory_path="ansible/.kolla/multinode"
+          if [[ ! -f "$inventory_path" ]]; then
+            echo "Kolla inventory not found, falling back to tfvars dynamic inventory." >&2
+            inventory_path="ansible/scripts/inventory_from_tfvars.py"
+          fi
 
           extra_args=(
             -e "cloudflare_tunnel_name=${{ inputs.tunnel_name }}"
@@ -115,7 +117,7 @@ jobs:
           fi
 
           ansible-playbook \
-            -i ansible/.kolla/multinode \
+            -i "$inventory_path" \
             ansible/playbooks/manage-cloudflare-tunnel.yml \
             --private-key ~/.ssh/id_ed25519 \
             "${extra_args[@]}"
