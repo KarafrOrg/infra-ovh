@@ -64,6 +64,11 @@ runs:
           log_file="${GITHUB_WORKSPACE}/ansible/.kolla/kolla-${safe_cmd}.log"
         fi
 
+        kolla_bindir="$(dirname "$kolla_cmd")"
+        # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
+        export PATH="${kolla_bindir}:${PATH}"
+        export VIRTUAL_ENV="$(dirname "$kolla_bindir")"
+
         args=(
           --configdir "$configdir"
           --inventory "$inventory"

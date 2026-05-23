@@ -51,7 +51,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.11"
 
       - name: Install Ansible and Kolla dependencies
         # language=bash
@@ -59,8 +59,6 @@ jobs:
           set -euo pipefail
           python -m pip install --upgrade pip
           python -m pip install -r ansible/requirements.txt
-          python -m pip install kolla-ansible
-          python -m pip install --upgrade "ansible-core>=2.17,<2.19"
 
       - name: Validate Ansible version for Kolla
         # language=bash
@@ -78,7 +76,7 @@ jobs:
               raise SystemExit(f"Could not parse ansible version from: {first_line}")
 
           version = Version(m.group(1))
-          if not (Version("2.17.0") <= version < Version("2.19.0")):
+          if not (Version("2.15.0") <= version < Version("2.17.0")):
               raise SystemExit(f"Unsupported ansible-core version for this Kolla release: {version}")
 
           print(f"Using ansible-core {version}")
