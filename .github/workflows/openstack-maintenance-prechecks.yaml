@@ -116,4 +116,3 @@ jobs:
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: prechecks
-

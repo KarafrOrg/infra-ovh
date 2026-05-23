@@ -115,4 +115,3 @@ jobs:
         with:
           command: reconfigure
           extra-args: "--tags prometheus"
-
