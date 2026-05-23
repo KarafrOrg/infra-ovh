@@ -61,33 +61,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r ansible/requirements.txt
 
-      - name: Provision Kolla playbooks for CLI
-        # language=bash
-        run: |
-          set -euo pipefail
-          kolla_share_dir="${pythonLocation}/share/kolla-ansible"
-          kolla_ansible_dir="${pythonLocation}/ansible"
-          rm -rf "${kolla_share_dir}"
-          mkdir -p "$(dirname "${kolla_share_dir}")"
-          git clone --depth 1 --branch stable/2025.1 https://opendev.org/openstack/kolla-ansible "${kolla_share_dir}"
-
-          # kolla-ansible resolves playbooks under ${BASEDIR}/ansible on these runners.
-          rm -rf "${kolla_ansible_dir}"
-          ln -s "${kolla_share_dir}/ansible" "${kolla_ansible_dir}"
-
-          test -f "${kolla_ansible_dir}/site.yml"
-          test -f "${kolla_ansible_dir}/kolla-host.yml"
-          test -f "${kolla_ansible_dir}/post-deploy.yml"
-
-      - name: Install Kolla Ansible Galaxy dependencies
-        # language=bash
-        run: |
-          set -euo pipefail
-          kolla_share_dir="${pythonLocation}/share/kolla-ansible"
-          ansible-galaxy collection install -r "${kolla_share_dir}/requirements.yml" --force
-          if [ -f "${kolla_share_dir}/requirements-core.yml" ]; then
-            ansible-galaxy collection install -r "${kolla_share_dir}/requirements-core.yml" --force
-          fi
 
       - name: Materialize SSH private key
         # language=bash
@@ -159,6 +132,11 @@ jobs:
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/openstack-kolla-minimal.yml \
             --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"
+
+      - name: Run Kolla-Ansible install-deps
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: install-deps
 
       - name: Run Kolla-Ansible bootstrap-servers
         uses: ./.github/actions/run-kolla-ansible

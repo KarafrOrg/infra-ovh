@@ -100,6 +100,11 @@ jobs:
           ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml --private-key ~/.ssh/id_ed25519
         shell: bash
 
+      - name: Run Kolla-Ansible install-deps
+        uses: ./.github/actions/run-kolla-ansible
+        with:
+          command: install-deps
+
       - name: Run Kolla-Ansible pull
         uses: ./.github/actions/run-kolla-ansible
         with:

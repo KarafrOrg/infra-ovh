@@ -42,6 +42,40 @@ runs:
         extra_args="${{ inputs.extra-args }}"
         command_name="${{ inputs.command }}"
 
+        supported_commands=(
+          bootstrap-servers
+          certificates
+          check
+          deploy
+          deploy-bifrost
+          deploy-containers
+          deploy-servers
+          destroy
+          gather-facts
+          genconfig
+          install-deps
+          mariadb-backup
+          mariadb-recovery
+          migrate-container-engine
+          nova-libvirt-cleanup
+          octavia-certificates
+          post-deploy
+          prechecks
+          prune-images
+          pull
+          rabbitmq-reset-state
+          reconfigure
+          stop
+          upgrade
+          upgrade-bifrost
+          validate-config
+        )
+        if [[ ! " ${supported_commands[*]} " =~ " ${command_name} " ]]; then
+          echo "Unsupported kolla-ansible command: ${command_name}" >&2
+          echo "Supported commands: ${supported_commands[*]}" >&2
+          exit 2
+        fi
+
         if [[ -z "$kolla_cmd" ]]; then
           kolla_cmd="${GITHUB_WORKSPACE}/ansible/.kolla/venv/bin/kolla-ansible"
         fi
