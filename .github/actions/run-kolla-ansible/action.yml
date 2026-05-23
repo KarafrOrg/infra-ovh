@@ -94,6 +94,7 @@ runs:
         export VIRTUAL_ENV="$(dirname "$kolla_bindir")"
 
         args=(
+          "$command_name"
           --configdir "$configdir"
           --inventory "$inventory"
           --passwords "$passwords_path"
@@ -104,8 +105,8 @@ runs:
           args+=("${extra[@]}")
         fi
 
-        args+=("$command_name")
-
         echo "Running kolla-ansible ${command_name}"
-        
+        printf 'Command argv: %q ' "$kolla_cmd" "${args[@]}"
+        printf '\n'
+
         "$kolla_cmd" "${args[@]}"
