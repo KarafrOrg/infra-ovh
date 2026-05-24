@@ -170,6 +170,43 @@ jobs:
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/openstack-kolla-maintenance.yml
 
+      - name: Generate SSH config for inventory aliases
+        # language=bash
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          python3 - <<'PY'
+          import json
+          import subprocess
+          from pathlib import Path
+          
+          inv = json.loads(subprocess.check_output([
+              "python", "ansible/scripts/inventory_from_tfvars.py", "--list"
+          ], text=True))
+          hostvars = inv.get("_meta", {}).get("hostvars", {})
+          cfg = Path.home() / ".ssh" / "config"
+          
+          lines = [
+              "Host *",
+              "  StrictHostKeyChecking no",
+              "  UserKnownHostsFile /dev/null",
+          ]
+          
+          for host, hv in sorted(hostvars.items()):
+              ansible_host = (hv.get("ansible_host") or "").strip()
+              ansible_user = (hv.get("ansible_user") or "ubuntu").strip()
+              if not ansible_host:
+                  continue
+              lines.extend([
+                  f"Host {host}",
+                  f"  HostName {ansible_host}",
+                  f"  User {ansible_user}",
+              ])
+          
+          cfg.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          PY
+          chmod 600 ~/.ssh/config
+
       - name: Validate rendered Kolla inventory host addresses
         # language=bash
         run: |
