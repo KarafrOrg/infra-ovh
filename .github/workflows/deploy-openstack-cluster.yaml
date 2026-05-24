@@ -170,6 +170,41 @@ jobs:
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/openstack-kolla-maintenance.yml
 
+      - name: Validate rendered Kolla inventory host addresses
+        # language=bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import subprocess
+          import sys
+          
+          inv = subprocess.check_output([
+              "ansible-inventory", "-i", "ansible/.kolla/multinode", "--list"
+          ], text=True)
+          data = json.loads(inv)
+          hostvars = data.get("_meta", {}).get("hostvars", {})
+          hosts = sorted(set(data.get("all", {}).get("hosts", [])))
+          
+          problems = []
+          for h in hosts:
+              hv = hostvars.get(h, {})
+              ansible_host = (hv.get("ansible_host") or "").strip()
+              if not ansible_host:
+                  problems.append(f"{h}: missing ansible_host")
+                  continue
+              if ansible_host == h:
+                  problems.append(f"{h}: ansible_host resolves to inventory alias '{h}'")
+          
+          if problems:
+              print("Invalid rendered Kolla inventory:", file=sys.stderr)
+              for p in problems:
+                  print(f" - {p}", file=sys.stderr)
+              sys.exit(1)
+          
+          print("Rendered Kolla inventory validation passed for hosts:", ", ".join(hosts))
+          PY
+
       - name: Run Kolla-Ansible install-deps
         uses: ./.github/actions/run-kolla-ansible
         with:
