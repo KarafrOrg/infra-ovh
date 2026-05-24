@@ -32,6 +32,14 @@
     or
     ((hostvars[item].openstack_role | default('') | trim | lower) == '' and item != openstack_kolla_preferred_controller_host)
 
+- name: Fallback to preferred-host split when role metadata not available
+  ansible.builtin.set_fact:
+    openstack_kolla_role_control_hosts: "{{ openstack_kolla_hosts | select('equalto', openstack_kolla_preferred_controller_host) | list if (openstack_kolla_preferred_controller_host in openstack_kolla_hosts) else [openstack_kolla_hosts[0]] }}"
+    openstack_kolla_role_compute_hosts: "{{ openstack_kolla_hosts | reject('equalto', (openstack_kolla_preferred_controller_host if (openstack_kolla_preferred_controller_host in openstack_kolla_hosts) else openstack_kolla_hosts[0])) | list }}"
+  when:
+    - (openstack_kolla_role_control_hosts | default([]) | length) == 0
+    - (openstack_kolla_role_compute_hosts | default([]) | length) == 0
+
 - name: Validate required role tags
   ansible.builtin.assert:
     that:
