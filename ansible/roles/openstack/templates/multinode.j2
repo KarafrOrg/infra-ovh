@@ -3,13 +3,13 @@
 {{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [network]
-{{ openstack_kolla_controller_host }}
+{{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [loadbalancer]
-{{ openstack_kolla_controller_host }}
+{{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [monitoring]
-{{ openstack_kolla_controller_host }}
+{{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [compute]
 {% for host in openstack_kolla_compute_hosts %}
@@ -17,7 +17,7 @@
 {% endfor %}
 
 [storage]
-{{ openstack_kolla_controller_host }}
+{{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [baremetal]
 {% for host in openstack_kolla_hosts %}
@@ -25,7 +25,7 @@
 {% endfor %}
 
 [deployment]
-{{ openstack_kolla_controller_host }}
+{{ openstack_kolla_controller_host }} ansible_host={{ hostvars[openstack_kolla_controller_host].ansible_host }} ansible_user={{ openstack_kolla_ansible_user }} api_interface={{ openstack_kolla_tunnel_interface }} network_interface={{ openstack_kolla_tunnel_interface }} neutron_external_interface={{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default(openstack_kolla_neutron_external_interface) }}{% if openstack_kolla_private_key_file | length > 0 %} ansible_ssh_private_key_file={{ openstack_kolla_private_key_file }}{% endif %}
 
 [baremetal:children]
 control
