@@ -18,13 +18,19 @@
   ansible.builtin.set_fact:
     openstack_kolla_role_control_hosts: "{{ (openstack_kolla_role_control_hosts | default([])) + [item] }}"
   loop: "{{ openstack_kolla_hosts }}"
-  when: (hostvars[item].openstack_role | default('')) == 'control'
+  when: >-
+    ((hostvars[item].openstack_role | default('') | trim | lower) == 'control')
+    or
+    ((hostvars[item].openstack_role | default('') | trim | lower) == '' and item == openstack_kolla_preferred_controller_host)
 
 - name: Build role-based compute host lists
   ansible.builtin.set_fact:
     openstack_kolla_role_compute_hosts: "{{ (openstack_kolla_role_compute_hosts | default([])) + [item] }}"
   loop: "{{ openstack_kolla_hosts }}"
-  when: (hostvars[item].openstack_role | default('')) == 'compute'
+  when: >-
+    ((hostvars[item].openstack_role | default('') | trim | lower) == 'compute')
+    or
+    ((hostvars[item].openstack_role | default('') | trim | lower) == '' and item != openstack_kolla_preferred_controller_host)
 
 - name: Validate required role tags
   ansible.builtin.assert:
@@ -33,7 +39,7 @@
       - openstack_kolla_role_compute_hosts | default([]) | length >= 1
       - (openstack_kolla_role_control_hosts | default([]) | length) + (openstack_kolla_role_compute_hosts | default([]) | length) == (openstack_kolla_hosts | length)
     fail_msg: >-
-      Each host in '{{ openstack_kolla_target_group }}' must have labels.role set to either 'control' or 'compute'.
+      Invalid role split for '{{ openstack_kolla_target_group }}'.
       Found control={{ openstack_kolla_role_control_hosts | default([]) }},
       compute={{ openstack_kolla_role_compute_hosts | default([]) }},
       all={{ openstack_kolla_hosts }}.
