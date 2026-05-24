@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 jobs:
-  prometheus-reconfigure:
+  mariadb-reconfigure:
     runs-on: ubuntu-latest
     environment: "${{ github.event.inputs.environment }}-openstack"
     env:
