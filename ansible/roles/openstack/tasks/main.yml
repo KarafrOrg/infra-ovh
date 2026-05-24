@@ -192,6 +192,15 @@
     replace: "  until: result is succeeded and (result.query_result | default([]) | length > 0) and (result.query_result[0] | length > 0) and (result.query_result[0][0]['Value'] | default('')) == \"Synced\""
   when: openstack_kolla_manage_control_deps | bool
 
+- name: Patch Kolla Prometheus DB bootstrap login user for non-ProxySQL topology
+  ansible.builtin.replace:
+    path: "{{ openstack_kolla_venv_path }}/share/kolla-ansible/ansible/roles/prometheus/tasks/bootstrap.yml"
+    regexp: '^\s*login_user:\s*"\{\{\s*shard_root_user\s*\}\}"$'
+    replace: '      login_user: "{{ database_user }}"'
+  when:
+    - openstack_kolla_manage_control_deps | bool
+    - not (openstack_kolla_enable_proxysql | bool)
+
 - name: Generate Kolla passwords file when missing
   block:
     - name: Seed Kolla passwords file from example template
