@@ -101,24 +101,6 @@ runs:
         if [[ -z "$passwords_path" ]]; then
           passwords_path="${OPENSTACK_KOLLA_PASSWORDS_PATH:-${GITHUB_WORKSPACE}/ansible/etc/kolla/passwords.yml}"
         fi
-        kolla_bindir="$(dirname "$kolla_cmd")"
-        # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
-        export PATH="${kolla_bindir}:${PATH}"
-        export VIRTUAL_ENV="$(dirname "$kolla_bindir")"
-        if [[ -f "${GITHUB_WORKSPACE}/ansible/ansible.cfg" ]]; then
-          export ANSIBLE_CONFIG="${GITHUB_WORKSPACE}/ansible/ansible.cfg"
-        fi
-        # CI runners are ephemeral, so disable host key prompts for non-interactive SSH.
-        export ANSIBLE_HOST_KEY_CHECKING=False
-        export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${ANSIBLE_SSH_ARGS:-}"
-
-        if [[ ! -d "$configdir" || ! -f "$inventory" ]]; then
-          echo "Kolla config/inventory missing; rendering with maintenance playbook..."
-          python "${GITHUB_WORKSPACE}/ansible/scripts/inventory_from_tfvars.py" --write-ssh-config ~/.ssh/config --list >/dev/null
-          ansible-playbook \
-            -i "${GITHUB_WORKSPACE}/ansible/scripts/inventory_from_tfvars.py" \
-            "${GITHUB_WORKSPACE}/ansible/playbooks/openstack-kolla-maintenance.yml"
-        fi
         if [[ ! -d "$configdir" ]]; then
           echo "Kolla config directory not found: $configdir" >&2
           exit 2
@@ -132,6 +114,16 @@ runs:
           echo "Kolla passwords file not found: $passwords_path" >&2
           exit 2
         fi
+        kolla_bindir="$(dirname "$kolla_cmd")"
+        # kolla-ansible shells out to ansible-playbook; force it to use the same venv toolchain.
+        export PATH="${kolla_bindir}:${PATH}"
+        export VIRTUAL_ENV="$(dirname "$kolla_bindir")"
+        if [[ -f "${GITHUB_WORKSPACE}/ansible/ansible.cfg" ]]; then
+          export ANSIBLE_CONFIG="${GITHUB_WORKSPACE}/ansible/ansible.cfg"
+        fi
+        # CI runners are ephemeral, so disable host key prompts for non-interactive SSH.
+        export ANSIBLE_HOST_KEY_CHECKING=False
+        export ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${ANSIBLE_SSH_ARGS:-}"
 
         args=(
           "$command_name"
