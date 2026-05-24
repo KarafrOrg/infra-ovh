@@ -85,6 +85,16 @@ jobs:
       - name: Set up ansible
         uses: ./.github/actions/setup-ansible
 
+      - name: Render Kolla inventory and globals
+        # language=bash
+        run: |
+          set -euo pipefail
+          python ansible/scripts/inventory_from_tfvars.py --write-ssh-config ~/.ssh/config --list
+          ansible-playbook \
+            -i ansible/scripts/inventory_from_tfvars.py \
+            ansible/playbooks/openstack-kolla-maintenance.yml
+        shell: bash
+
       - name: Run Kolla-Ansible install-deps
         uses: ./.github/actions/run-kolla-ansible
         with:
