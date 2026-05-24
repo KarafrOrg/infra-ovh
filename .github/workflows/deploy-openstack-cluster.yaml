@@ -224,14 +224,18 @@ jobs:
               "ansible-inventory", "-i", "ansible/.kolla/multinode", "--list"
           ], text=True))
 
-          all_hosts = sorted(set(data.get("baremetal", {}).get("hosts", [])))
+          source = json.loads(subprocess.check_output([
+              "python", "ansible/scripts/inventory_from_tfvars.py", "--list"
+          ], text=True))
+          expected_all_hosts = sorted(set(source.get("ovh_dedicated_servers", {}).get("hosts", [])))
+
           control_hosts = sorted(set(data.get("control", {}).get("hosts", [])))
           compute_hosts = sorted(set(data.get("compute", {}).get("hosts", [])))
 
-          if not all_hosts:
-              print("Expected baremetal hosts to be populated in ansible/.kolla/multinode", file=sys.stderr)
+          if not expected_all_hosts:
+              print("Expected source hosts from inventory_from_tfvars.py to be populated", file=sys.stderr)
               print(json.dumps({
-                  "baremetal": data.get("baremetal", {}),
+                  "source_group": source.get("ovh_dedicated_servers", {}),
                   "control": data.get("control", {}),
                   "compute": data.get("compute", {}),
               }, indent=2), file=sys.stderr)
@@ -242,14 +246,14 @@ jobs:
               sys.exit(1)
 
           controller = control_hosts[0]
-          expected_compute = sorted([h for h in all_hosts if h != controller])
+          expected_compute = sorted([h for h in expected_all_hosts if h != controller])
           if compute_hosts != expected_compute:
               print(
                   f"Compute group mismatch: expected {expected_compute}, got {compute_hosts}",
                   file=sys.stderr,
               )
               print(json.dumps({
-                  "baremetal_hosts": all_hosts,
+                  "source_hosts": expected_all_hosts,
                   "control_hosts": control_hosts,
                   "compute_hosts": compute_hosts,
               }, indent=2), file=sys.stderr)
