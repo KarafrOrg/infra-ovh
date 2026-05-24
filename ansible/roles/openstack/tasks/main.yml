@@ -55,7 +55,7 @@
 - name: Select controller and compute nodes from roles
   ansible.builtin.set_fact:
     openstack_kolla_controller_host: "{{ (openstack_kolla_role_control_hosts | first) }}"
-    openstack_kolla_compute_hosts: "{{ openstack_kolla_role_compute_hosts }}"
+    openstack_kolla_compute_hosts: "{{ openstack_kolla_hosts | reject('equalto', (openstack_kolla_role_control_hosts | first)) | list }}"
 
 - name: Validate controller networking facts
   ansible.builtin.assert:
