@@ -89,6 +89,7 @@ def build_inventory() -> dict:
 
         server_config = dedicated_servers[source_host_name] or {}
         labels = server_config.get("labels", {}) or {}
+        openstack_role = str(labels.get("role") or server_config.get("role") or "").strip().lower()
         raw_public_ip = labels.get("ip") or server_config.get("ip")
         raw_service_name = labels.get("service_name") or server_config.get("service_name")
         public_ip = normalize_public_ip(raw_public_ip)
@@ -112,6 +113,7 @@ def build_inventory() -> dict:
             "wireguard_network": str(wireguard_network),
             "wireguard_service_name": service_name,
             "wireguard_source_host_name": source_host_name,
+            "openstack_role": openstack_role,
         }
 
     return {
