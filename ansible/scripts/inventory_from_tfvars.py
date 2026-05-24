@@ -127,12 +127,55 @@ def build_inventory() -> dict:
     }
 
 
+def render_ssh_config(inventory: dict) -> str:
+    hostvars = inventory.get("_meta", {}).get("hostvars", {})
+    lines = [
+        "Host *",
+        "  StrictHostKeyChecking no",
+        "  UserKnownHostsFile /dev/null",
+    ]
+
+    for host, vars_for_host in sorted(hostvars.items()):
+        ansible_host = str(vars_for_host.get("ansible_host") or "").strip()
+        ansible_user = str(vars_for_host.get("ansible_user") or DEFAULT_ANSIBLE_USER).strip()
+        if not ansible_host:
+            continue
+        lines.extend(
+            [
+                f"Host {host}",
+                f"  HostName {ansible_host}",
+                f"  User {ansible_user}",
+            ]
+        )
+
+    return "\n".join(lines) + "\n"
+
+
+def write_ssh_config_file(path_arg: str, inventory: dict) -> None:
+    ssh_config_path = Path(path_arg).expanduser()
+    ssh_config_path.parent.mkdir(parents=True, exist_ok=True)
+    ssh_config_path.write_text(render_ssh_config(inventory), encoding="utf-8")
+    os.chmod(ssh_config_path, 0o600)
+
+
 def main() -> None:
+    args = list(sys.argv[1:])
+    write_ssh_config_path = None
+    if "--write-ssh-config" in args:
+        index = args.index("--write-ssh-config")
+        if index + 1 >= len(args):
+            fail("--write-ssh-config requires a file path argument")
+        write_ssh_config_path = args[index + 1]
+        del args[index:index + 2]
+
     inventory = build_inventory()
 
-    if "--host" in sys.argv:
-        host_index = sys.argv.index("--host") + 1
-        host_name = sys.argv[host_index] if host_index < len(sys.argv) else ""
+    if write_ssh_config_path:
+        write_ssh_config_file(write_ssh_config_path, inventory)
+
+    if "--host" in args:
+        host_index = args.index("--host") + 1
+        host_name = args[host_index] if host_index < len(args) else ""
         print(json.dumps(inventory.get("_meta", {}).get("hostvars", {}).get(host_name, {})))
         return
 
