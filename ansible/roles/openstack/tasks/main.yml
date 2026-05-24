@@ -9,10 +9,21 @@
       - openstack_kolla_hosts | length >= 2
     fail_msg: "Need at least 2 hosts in group '{{ openstack_kolla_target_group }}' for 1 controller + 1 compute."
 
+- name: Select preferred controller candidate
+  ansible.builtin.set_fact:
+    openstack_kolla_controller_candidates: "{{ openstack_kolla_hosts | select('equalto', openstack_kolla_preferred_controller_host) | list }}"
+
 - name: Select controller and compute nodes
   ansible.builtin.set_fact:
-    openstack_kolla_controller_host: "{{ openstack_kolla_hosts[0] }}"
-    openstack_kolla_compute_hosts: "{{ openstack_kolla_hosts[1:] }}"
+    openstack_kolla_controller_host: "{{ (openstack_kolla_controller_candidates | first) if (openstack_kolla_controller_candidates | length > 0) else openstack_kolla_hosts[0] }}"
+    openstack_kolla_compute_hosts: "{{ openstack_kolla_hosts | reject('equalto', ((openstack_kolla_controller_candidates | first) if (openstack_kolla_controller_candidates | length > 0) else openstack_kolla_hosts[0])) | list }}"
+
+- name: Validate controller and compute split
+  ansible.builtin.assert:
+    that:
+      - openstack_kolla_controller_host == (openstack_kolla_preferred_controller_host if openstack_kolla_preferred_controller_host in openstack_kolla_hosts else openstack_kolla_hosts[0])
+      - openstack_kolla_compute_hosts | length == (openstack_kolla_hosts | length - 1)
+    fail_msg: "Unexpected split: controller={{ openstack_kolla_controller_host }}, computes={{ openstack_kolla_compute_hosts }}, all={{ openstack_kolla_hosts }}"
 
 - name: Validate controller networking facts
   ansible.builtin.assert:

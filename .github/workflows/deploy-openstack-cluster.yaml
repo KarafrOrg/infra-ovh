@@ -211,6 +211,39 @@ jobs:
           print("Rendered Kolla inventory validation passed for hosts:", ", ".join(hosts))
           PY
 
+      - name: Validate rendered Kolla role groups (controller vs compute)
+        # language=bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          data = json.loads(subprocess.check_output([
+              "ansible-inventory", "-i", "ansible/.kolla/multinode", "--list"
+          ], text=True))
+
+          all_hosts = sorted(set(data.get("all", {}).get("hosts", [])))
+          control_hosts = sorted(set(data.get("control", {}).get("hosts", [])))
+          compute_hosts = sorted(set(data.get("compute", {}).get("hosts", [])))
+
+          if len(control_hosts) != 1:
+              print(f"Expected exactly 1 controller, got: {control_hosts}", file=sys.stderr)
+              sys.exit(1)
+
+          controller = control_hosts[0]
+          expected_compute = sorted([h for h in all_hosts if h != controller])
+          if compute_hosts != expected_compute:
+              print(
+                  f"Compute group mismatch: expected {expected_compute}, got {compute_hosts}",
+                  file=sys.stderr,
+              )
+              sys.exit(1)
+
+          print(f"Controller={controller}; compute hosts={compute_hosts}")
+          PY
+
       - name: Run Kolla-Ansible install-deps
         uses: ./.github/actions/run-kolla-ansible
         with:
