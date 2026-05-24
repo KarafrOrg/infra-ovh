@@ -1,4 +1,4 @@
-name: OpenStack maintenance - Reconfigure prometheus
+name: OpenStack maintenance - Reconfigure MariaDB
 
 on:
   workflow_dispatch:
@@ -31,24 +31,6 @@ jobs:
           workload_identity_provider: ${{ vars.GCP_WIF_RESOURCE_ID }}
           service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
 
-      - name: Materialize Prometheus remote write URL
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-url
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_URL
-
-      - name: Materialize Prometheus remote write username
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-username
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_USERNAME
-
-      - name: Materialize Prometheus remote write password
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-password
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_PASSWORD
-
       - name: Set up ansible
         uses: ./.github/actions/setup-ansible
 
@@ -71,4 +53,4 @@ jobs:
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: reconfigure
-          extra-args: "--tags prometheus"
+          extra-args: "--tags mariadb"

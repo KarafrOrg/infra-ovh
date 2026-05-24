@@ -102,8 +102,14 @@ jobs:
       - name: Upgrade OpenStack
         # language=bash
         run: |
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/prepare-hosts.yml --private-key ~/.ssh/id_ed25519
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml --private-key ~/.ssh/id_ed25519
+          ansible-playbook \
+            ansible/playbooks/prepare-hosts.yml \
+            -i ansible/scripts/inventory_from_tfvars.py \
+            --private-key ~/.ssh/id_ed25519
+          ansible-playbook \
+            ansible/playbooks/openstack-kolla-maintenance.yml \
+            -i ansible/scripts/inventory_from_tfvars.py \
+            --private-key ~/.ssh/id_ed25519
         shell: bash
 
       - name: Run Kolla-Ansible install-deps

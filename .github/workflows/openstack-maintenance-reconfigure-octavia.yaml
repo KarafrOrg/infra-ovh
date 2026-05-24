@@ -1,4 +1,4 @@
-name: OpenStack maintenance - prechecks
+name: OpenStack maintenance - Reconfigure Octavia
 
 on:
   workflow_dispatch:
@@ -8,21 +8,19 @@ on:
         required: true
         default: karafra-net
         type: string
-  schedule:
-    - cron: "30 2 * * *"
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  prechecks:
+  prometheus-reconfigure:
     runs-on: ubuntu-latest
+    environment: "${{ github.event.inputs.environment }}-openstack"
     env:
       TFVARS_PATH: live/${{ github.event.inputs.environment || 'karafra-net' }}/terraform.auto.tfvars
       ANSIBLE_CONFIG: ansible/ansible.cfg
       OPENSTACK_KOLLA_PASSWORDS_PATH: ${{ github.workspace }}/ansible/etc/kolla/passwords.yml
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,9 +30,6 @@ jobs:
         with:
           workload_identity_provider: ${{ vars.GCP_WIF_RESOURCE_ID }}
           service_account: gha-infra-ovh@karafra-net.iam.gserviceaccount.com
-
-      - name: Setup Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
 
       - name: Materialize Octavia client cert and key
         uses: ./.github/actions/materialize-secret
@@ -66,45 +61,17 @@ jobs:
           secret-name: openstack-octavia-server-ca-passphrase
           env-name: OPENSTACK_KOLLA_OCTAVIA_CA_PASSWORD
 
-      - name: Materialize Prometheus remote write URL
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-url
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_URL
+      - name: Set up ansible
+        uses: ./.github/actions/setup-ansible
 
-      - name: Materialize Prometheus remote write username
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-username
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_USERNAME
-
-      - name: Materialize Prometheus remote write password
-        uses: ./.github/actions/materialize-secret
-        with:
-          secret-name: openstack-prom-remote-write-password
-          env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_PASSWORD
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Ansible dependencies
+      - name: Render Kolla inventory and globals
         # language=bash
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r ansible/requirements.txt
-        shell: bash
-
-      - name: Configure SSH key
-        uses: ./.github/actions/setup-ssh-key
-        with:
-          secret-name: ovh-vps-ssh-private-key
-
-      - name: Prepare Kolla-Ansible config and inventory
-        # language=bash
-        run: |
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/openstack-kolla-maintenance.yml --private-key ~/.ssh/id_ed25519
+          set -euo pipefail
+          python ansible/scripts/inventory_from_tfvars.py --write-ssh-config ~/.ssh/config --list
+          ansible-playbook \
+            -i ansible/scripts/inventory_from_tfvars.py \
+            ansible/playbooks/openstack-kolla-maintenance.yml
         shell: bash
 
       - name: Run Kolla-Ansible install-deps
@@ -112,7 +79,8 @@ jobs:
         with:
           command: install-deps
 
-      - name: Run Kolla-Ansible prechecks
+      - name: Run Kolla-Ansible reconfigure (prometheus)
         uses: ./.github/actions/run-kolla-ansible
         with:
-          command: prechecks
+          command: reconfigure
+          extra-args: "--tags octavia"
