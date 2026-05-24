@@ -1,4 +1,4 @@
-name: OpenStack maintenance - prometheus reconfigure
+name: OpenStack maintenance - Reconfigure prometheus
 
 on:
   workflow_dispatch:
@@ -82,28 +82,8 @@ jobs:
           secret-name: openstack-prom-remote-write-password
           env-name: OPENSTACK_KOLLA_PROM_REMOTE_WRITE_PASSWORD
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Ansible dependencies
-        # language=bash
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r ansible/requirements.txt
-        shell: bash
-
-      - name: Configure SSH key
-        uses: ./.github/actions/setup-ssh-key
-        with:
-          secret-name: ovh-vps-ssh-private-key
-
-      - name: Reconfigure Prometheus
-        # language=bash
-        run: |
-          ansible-playbook -i ansible/scripts/inventory_from_tfvars.py ansible/playbooks/setup-prometheus.yml --private-key ~/.ssh/id_ed25519
-        shell: bash
+      - name: Set up ansible
+        uses: ./.github/actions/setup-ansible
 
       - name: Run Kolla-Ansible install-deps
         uses: ./.github/actions/run-kolla-ansible
