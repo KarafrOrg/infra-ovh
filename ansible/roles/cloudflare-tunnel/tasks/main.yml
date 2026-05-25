@@ -45,8 +45,6 @@
   ansible.builtin.set_fact:
     _cloudflare_container_name: "cloudflared-{{ cloudflare_tunnel_name }}"
 
-# ── Absent path: stop and remove ──────────────────────────────────────────────
-
 - name: Check for existing tunnel container
   ansible.builtin.command:
     argv: [docker, ps, -a, --filter, "name=^/{{ _cloudflare_container_name }}$", --format, "{{ '{{.ID}}' }}"]
@@ -63,8 +61,6 @@
 - name: End play when state=absent
   ansible.builtin.meta: end_host
   when: cloudflare_tunnel_state == 'absent'
-
-# ── Present path: (re)create container ────────────────────────────────────────
 
 - name: Set cloudflared command for token-managed tunnel
   ansible.builtin.set_fact:
