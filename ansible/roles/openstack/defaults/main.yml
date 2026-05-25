@@ -9,6 +9,7 @@ openstack_kolla_passwords_path: "{{ lookup('env', 'OPENSTACK_KOLLA_PASSWORDS_PAT
 openstack_kolla_venv_path: "{{ openstack_kolla_work_dir }}/venv"
 openstack_kolla_tool_shim_dir: "{{ openstack_kolla_work_dir }}/bin"
 openstack_kolla_getopt_bin: "/opt/homebrew/opt/gnu-getopt/bin"
+openstack_kolla_external_fqdn: "openstack.karafra.lan.karafra.net"
 openstack_kolla_manage_control_deps: true
 # When false, skips the ansible_default_ipv4 assertion and network_interface derivation.
 # Set to false in playbooks that only reconfigure services and don't render globals.yml.
