@@ -8,6 +8,11 @@ on:
         required: true
         default: karafra-net
         type: string
+      run_bootstrap_servers:
+        description: "Run Kolla-Ansible bootstrap-servers during deployment"
+        required: true
+        type: boolean
+        default: true
       run_pre_checks:
         description: "Run Kolla-Ansible pre-checks during deployment (with --use-test-images)"
         required: true
@@ -25,11 +30,6 @@ on:
         default: true
       run_post_deploy:
         description: "Run Kolla-Ansible post-deploy during deployment"
-        required: true
-        type: boolean
-        default: true
-      run_bootstrap_servers:
-        description: "Run Kolla-Ansible bootstrap-servers during deployment"
         required: true
         type: boolean
         default: true
