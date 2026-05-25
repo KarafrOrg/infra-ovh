@@ -67,8 +67,11 @@ openstack_kolla_octavia_certs_server_ca_common_name: "server-ca.karafra.lan"
 openstack_kolla_octavia_certs_client_ca_common_name: "client-ca.karafra.lan"
 openstack_kolla_octavia_certs_client_req_common_name: "client.karafra.lan"
 openstack_kolla_nova_compute_virt_type: qemu
-openstack_kolla_neutron_external_interface: eno1
+openstack_kolla_neutron_external_interface: ext-br
 openstack_kolla_neutron_bridge_name: br-ex
+openstack_kolla_allow_management_interface_for_neutron_external: false
+openstack_kolla_prepare_external_uplink_interface: true
+openstack_kolla_external_uplink_interface_name: ext-br
 openstack_kolla_install_deps: false
 openstack_kolla_required_collections:
   - community.docker

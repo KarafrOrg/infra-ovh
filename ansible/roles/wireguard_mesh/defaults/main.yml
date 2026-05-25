@@ -13,3 +13,5 @@ wireguard_enable_ip_forwarding: true
 wireguard_manage_ufw: false
 wireguard_service_enabled: true
 wireguard_service_state: started
+wireguard_create_external_uplink_interface: true
+wireguard_external_uplink_interface_name: ext-br

@@ -62,6 +62,24 @@
       - wireguard_address | length > 0
     fail_msg: "wireguard_address must be defined for {{ inventory_hostname }}"
 
+- name: Ensure external uplink interface exists
+  ansible.builtin.command: "ip link show {{ wireguard_external_uplink_interface_name }}"
+  register: wireguard_external_uplink_interface_check
+  failed_when: false
+  changed_when: false
+  when: wireguard_create_external_uplink_interface | bool
+
+- name: Create external uplink interface
+  ansible.builtin.command: "ip link add {{ wireguard_external_uplink_interface_name }} type dummy"
+  when:
+    - wireguard_create_external_uplink_interface | bool
+    - wireguard_external_uplink_interface_check.rc != 0
+
+- name: Bring external uplink interface up
+  ansible.builtin.command: "ip link set {{ wireguard_external_uplink_interface_name }} up"
+  changed_when: false
+  when: wireguard_create_external_uplink_interface | bool
+
 - name: Configure kernel forwarding for WireGuard
   ansible.builtin.copy:
     dest: /etc/sysctl.d/99-wireguard-forwarding.conf

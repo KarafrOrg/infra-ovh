@@ -63,6 +63,58 @@
       - hostvars[openstack_kolla_controller_host].wireguard_address is defined
     fail_msg: "Controller host is missing wireguard_address. Run wireguard playbook first and ensure inventory provides WireGuard addresses."
 
+- name: Capture controller management interface
+  ansible.builtin.set_fact:
+    openstack_kolla_controller_management_interface: "{{ hostvars[openstack_kolla_controller_host].ansible_default_ipv4.interface | default('') }}"
+
+- name: Prevent using management interface for Neutron external network
+  ansible.builtin.assert:
+    that:
+      - openstack_kolla_allow_management_interface_for_neutron_external | bool or (openstack_kolla_neutron_external_interface != openstack_kolla_controller_management_interface)
+    fail_msg: >-
+      Refusing to use management interface '{{ openstack_kolla_controller_management_interface }}' as
+      openstack_kolla_neutron_external_interface because it can drop SSH mid-deploy.
+      Set openstack_kolla_neutron_external_interface to a dedicated interface (for example '{{ openstack_kolla_external_uplink_interface_name }}')
+      or explicitly allow this by setting openstack_kolla_allow_management_interface_for_neutron_external=true.
+
+- name: Ensure Neutron external uplink interface exists on all hosts
+  ansible.builtin.command: "ip link show {{ openstack_kolla_external_uplink_interface_name }}"
+  register: openstack_kolla_external_uplink_interface_check
+  failed_when: false
+  changed_when: false
+  loop: "{{ openstack_kolla_hosts }}"
+  loop_control:
+    loop_var: openstack_kolla_host
+  delegate_to: "{{ openstack_kolla_host }}"
+  become: true
+  when:
+    - openstack_kolla_prepare_external_uplink_interface | bool
+    - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
+
+- name: Create Neutron external uplink interface on all hosts
+  ansible.builtin.command: "ip link add {{ openstack_kolla_external_uplink_interface_name }} type dummy"
+  loop: "{{ openstack_kolla_external_uplink_interface_check.results | default([]) }}"
+  loop_control:
+    loop_var: openstack_kolla_external_uplink_result
+  delegate_to: "{{ openstack_kolla_external_uplink_result.openstack_kolla_host }}"
+  become: true
+  when:
+    - openstack_kolla_prepare_external_uplink_interface | bool
+    - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
+    - openstack_kolla_external_uplink_result.rc != 0
+
+- name: Bring Neutron external uplink interface up on all hosts
+  ansible.builtin.command: "ip link set {{ openstack_kolla_external_uplink_interface_name }} up"
+  changed_when: false
+  loop: "{{ openstack_kolla_hosts }}"
+  loop_control:
+    loop_var: openstack_kolla_host
+  delegate_to: "{{ openstack_kolla_host }}"
+  become: true
+  when:
+    - openstack_kolla_prepare_external_uplink_interface | bool
+    - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
+
 - name: Compute derived Kolla networking values
   ansible.builtin.set_fact:
     openstack_kolla_wireguard_prefix: "{{ hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '') }}"
