@@ -9,9 +9,9 @@ on:
         default: karafra-net
         type: string
       origin_url:
-        description: Horizon API origin URL (used in quick mode)
+        description: Openstack origin URL (used in quick mode)
         required: false
-        default: http://10.200.0.1:5000
+        default: http://10.200.0.1:80
         type: string
       mode:
         description: Tunnel mode
