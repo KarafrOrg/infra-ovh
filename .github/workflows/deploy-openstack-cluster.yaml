@@ -28,6 +28,11 @@ on:
         required: true
         type: boolean
         default: true
+      run_bootstrap_servers:
+        description: "Run Kolla-Ansible bootstrap-servers during deployment"
+        required: true
+        type: boolean
+        default: true
   workflow_run:
     workflows:
       - Configure WireGuard mesh
@@ -271,6 +276,7 @@ jobs:
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: bootstrap-servers
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_bootstrap_servers }}
 
       - name: Run Kolla-Ansible prechecks
         uses: ./.github/actions/run-kolla-ansible
