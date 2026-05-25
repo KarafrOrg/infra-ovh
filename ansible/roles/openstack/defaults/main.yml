@@ -43,7 +43,7 @@ openstack_kolla_enable_cinder_backup: false
 openstack_kolla_enable_fluentd: true
 openstack_kolla_enable_keepalived: false
 openstack_kolla_enable_proxysql: false
-openstack_kolla_enable_haproxy: true
+openstack_kolla_enable_haproxy: false
 openstack_kolla_cinder_volume_group: "cinder-volumes"
 openstack_kolla_prometheus_scrape_interval: "30s"
 openstack_kolla_prometheus_remote_write_url: "{{ lookup('env', 'OPENSTACK_KOLLA_PROM_REMOTE_WRITE_URL') | default('', true) }}"
