@@ -30,8 +30,11 @@ runs:
           PRIVATE_KEY="$(gcloud secrets versions access latest --secret="$SECRET_NAME")"
         fi
 
-        # Mask the full secret and each individual line to avoid log leaks.
-        echo "::add-mask::${PRIVATE_KEY}"
+        # Mask secret safely; multiline values must be workflow-command escaped.
+        escaped_private_key="${PRIVATE_KEY//'%'/'%25'}"
+        escaped_private_key="${escaped_private_key//$'\r'/'%0D'}"
+        escaped_private_key="${escaped_private_key//$'\n'/'%0A'}"
+        echo "::add-mask::${escaped_private_key}"
         while IFS= read -r key_line; do
           [[ -z "$key_line" ]] && continue
           echo "::add-mask::${key_line}"
