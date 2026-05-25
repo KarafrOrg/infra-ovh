@@ -11,7 +11,8 @@ from pathlib import Path
 
 DEFAULT_TFVARS_PATH = "live/karafra-net/terraform.auto.tfvars"
 DEFAULT_GROUP_NAME = "ovh_dedicated_servers"
-DEFAULT_WIREGUARD_NETWORK = "10.200.0.0/24"
+DEFAULT_WIREGUARD_INTERNAL_NETWORK = "10.200.0.0/24"
+DEFAULT_WIREGUARD_EXTERNAL_NETWORK = "10.201.0.0/24"
 DEFAULT_WIREGUARD_LISTEN_PORT = 51820
 DEFAULT_ANSIBLE_USER = "ubuntu"
 HYPHENATED_IPV4 = re.compile(r"^\d{1,3}(?:-\d{1,3}){3}$")
@@ -56,10 +57,25 @@ def normalize_host_alias(value: str) -> str:
 def build_inventory() -> dict:
     tfvars_path = Path(os.getenv("TFVARS_PATH", DEFAULT_TFVARS_PATH))
     group_name = os.getenv("WIREGUARD_GROUP_NAME", DEFAULT_GROUP_NAME)
-    wireguard_network = ipaddress.ip_network(
-        os.getenv("WIREGUARD_NETWORK", DEFAULT_WIREGUARD_NETWORK),
+    wireguard_internal_network_raw = os.getenv(
+        "WIREGUARD_INTERNAL_NETWORK",
+        os.getenv("WIREGUARD_NETWORK", DEFAULT_WIREGUARD_INTERNAL_NETWORK),
+    )
+    wireguard_internal_network = ipaddress.ip_network(
+        wireguard_internal_network_raw,
         strict=False,
     )
+    wireguard_external_network_raw = os.getenv("WIREGUARD_EXTERNAL_NETWORK", DEFAULT_WIREGUARD_EXTERNAL_NETWORK).strip()
+    wireguard_external_network = (
+        ipaddress.ip_network(wireguard_external_network_raw, strict=False)
+        if wireguard_external_network_raw
+        else None
+    )
+    if wireguard_external_network and wireguard_external_network.overlaps(wireguard_internal_network):
+        fail(
+            "WIREGUARD_EXTERNAL_NETWORK must not overlap WIREGUARD_INTERNAL_NETWORK "
+            f"({wireguard_external_network} overlaps {wireguard_internal_network})"
+        )
     wireguard_listen_port = int(
         os.getenv("WIREGUARD_LISTEN_PORT", str(DEFAULT_WIREGUARD_LISTEN_PORT))
     )
@@ -72,9 +88,13 @@ def build_inventory() -> dict:
         fail(f"Expected 'dedicated_servers' to be a map in {tfvars_path}")
 
     source_hosts = sorted(dedicated_servers)
-    if len(source_hosts) >= wireguard_network.num_addresses - 1:
+    if len(source_hosts) >= wireguard_internal_network.num_addresses - 1:
         fail(
-            f"WireGuard network {wireguard_network} is too small for {len(source_hosts)} hosts"
+            f"WireGuard internal network {wireguard_internal_network} is too small for {len(source_hosts)} hosts"
+        )
+    if wireguard_external_network and len(source_hosts) >= wireguard_external_network.num_addresses - 1:
+        fail(
+            f"WireGuard external network {wireguard_external_network} is too small for {len(source_hosts)} hosts"
         )
 
     hosts: list[str] = []
@@ -100,17 +120,28 @@ def build_inventory() -> dict:
                 f"Host '{source_host_name}' is missing both labels.ip and service_name in {tfvars_path}"
             )
 
-        address = wireguard_network.network_address + index
+        address = wireguard_internal_network.network_address + index
+        external_address = (
+            wireguard_external_network.network_address + index
+            if wireguard_external_network
+            else None
+        )
         hosts.append(host_alias)
         hostvars[host_alias] = {
             "ansible_host": public_ip or service_name,
             "ansible_user": ansible_user,
             "ansible_python_interpreter": "/usr/bin/python3",
             "public_ip": public_ip,
-            "wireguard_address": f"{address}/{wireguard_network.prefixlen}",
+            "wireguard_address": f"{address}/{wireguard_internal_network.prefixlen}",
+            "wireguard_external_address": (
+                f"{external_address}/{wireguard_external_network.prefixlen}"
+                if wireguard_external_network and external_address is not None
+                else ""
+            ),
             "wireguard_endpoint": public_ip or service_name,
             "wireguard_listen_port": wireguard_listen_port,
-            "wireguard_network": str(wireguard_network),
+            "wireguard_internal_network": str(wireguard_internal_network),
+            "wireguard_network": str(wireguard_internal_network),
             "wireguard_service_name": service_name,
             "wireguard_source_host_name": source_host_name,
             "openstack_role": openstack_role,
@@ -121,7 +152,9 @@ def build_inventory() -> dict:
             "hosts": hosts,
             "vars": {
                 "wireguard_inventory_group": group_name,
-                "wireguard_network": str(wireguard_network),
+                "wireguard_internal_network": str(wireguard_internal_network),
+                "wireguard_network": str(wireguard_internal_network),
+                "wireguard_external_network": str(wireguard_external_network) if wireguard_external_network else "",
                 "wireguard_listen_port": wireguard_listen_port,
             },
         },
