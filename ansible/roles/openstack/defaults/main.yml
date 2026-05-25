@@ -41,22 +41,22 @@ openstack_kolla_enable_cinder_backend_lvm: true
 openstack_kolla_enable_cinder_backup: false
 openstack_kolla_enable_fluentd: true
 openstack_kolla_enable_keepalived: true
-openstack_kolla_enable_proxysql: true
+openstack_kolla_enable_proxysql: false
 openstack_kolla_enable_haproxy: false
 openstack_kolla_cinder_volume_group: "cinder-volumes"
 openstack_kolla_prometheus_scrape_interval: "30s"
 openstack_kolla_prometheus_remote_write_url: "{{ lookup('env', 'OPENSTACK_KOLLA_PROM_REMOTE_WRITE_URL') | default('', true) }}"
 openstack_kolla_prometheus_remote_write_username: "{{ lookup('env', 'OPENSTACK_KOLLA_PROM_REMOTE_WRITE_USERNAME') | default('', true) }}"
 openstack_kolla_prometheus_remote_write_password: "{{ lookup('env', 'OPENSTACK_KOLLA_PROM_REMOTE_WRITE_PASSWORD') | default('', true) }}"
-openstack_kolla_prometheus_node_targets: []
-openstack_kolla_prometheus_cadvisor_targets: []
-openstack_kolla_prometheus_server_targets: []
-openstack_kolla_prometheus_alertmanager_targets: []
-openstack_kolla_prometheus_openstack_exporter_targets: []
-openstack_kolla_prometheus_blackbox_targets: []
-openstack_kolla_prometheus_memcached_exporter_targets: []
-openstack_kolla_prometheus_mysqld_exporter_targets: []
-openstack_kolla_prometheus_libvirt_exporter_targets: []
+openstack_kolla_prometheus_node_targets: [ ]
+openstack_kolla_prometheus_cadvisor_targets: [ ]
+openstack_kolla_prometheus_server_targets: [ ]
+openstack_kolla_prometheus_alertmanager_targets: [ ]
+openstack_kolla_prometheus_openstack_exporter_targets: [ ]
+openstack_kolla_prometheus_blackbox_targets: [ ]
+openstack_kolla_prometheus_memcached_exporter_targets: [ ]
+openstack_kolla_prometheus_mysqld_exporter_targets: [ ]
+openstack_kolla_prometheus_libvirt_exporter_targets: [ ]
 openstack_kolla_octavia_ca_password: "{{ lookup('env', 'OPENSTACK_KOLLA_OCTAVIA_CA_PASSWORD') | default('', true) }}"
 openstack_kolla_octavia_certs_country: "SK"
 openstack_kolla_octavia_certs_state: "Bratislava"

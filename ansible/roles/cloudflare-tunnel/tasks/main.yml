@@ -17,6 +17,12 @@
       - cloudflare_tunnel_mode in ['token', 'quick']
     fail_msg: "cloudflare_tunnel_mode must be 'token' or 'quick'"
 
+- name: Validate tunnel protocol
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_protocol in ['auto', 'quic', 'http2']
+    fail_msg: "cloudflare_tunnel_protocol must be one of: auto, quic, http2"
+
 - name: Validate token is provided for token mode
   ansible.builtin.assert:
     that:
@@ -63,14 +69,14 @@
 - name: Set cloudflared command for token-managed tunnel
   ansible.builtin.set_fact:
     _cloudflare_run_command: >-
-      tunnel --no-autoupdate run --token {{ cloudflare_tunnel_token | quote }}
+      tunnel --no-autoupdate --protocol {{ cloudflare_tunnel_protocol | quote }} run --token {{ cloudflare_tunnel_token | quote }}
   when: cloudflare_tunnel_mode == 'token'
   no_log: true
 
 - name: Set cloudflared command for quick tunnel
   ansible.builtin.set_fact:
     _cloudflare_run_command: >-
-      tunnel --no-autoupdate --url {{ cloudflare_tunnel_origin_url | quote }}
+      tunnel --no-autoupdate --protocol {{ cloudflare_tunnel_protocol | quote }} --url {{ cloudflare_tunnel_origin_url | quote }}
   when: cloudflare_tunnel_mode == 'quick'
 
 - name: Remove existing container before reconfiguration
