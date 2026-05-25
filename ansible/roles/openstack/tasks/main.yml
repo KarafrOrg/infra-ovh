@@ -91,6 +91,19 @@
     - openstack_kolla_prepare_external_uplink_interface | bool
     - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
 
+- name: Ensure dummy netdev kernel module is available on all hosts
+  ansible.builtin.command: modprobe dummy
+  changed_when: false
+  failed_when: false
+  loop: "{{ openstack_kolla_hosts }}"
+  loop_control:
+    loop_var: openstack_kolla_host
+  delegate_to: "{{ openstack_kolla_host }}"
+  become: true
+  when:
+    - openstack_kolla_prepare_external_uplink_interface | bool
+    - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
+
 - name: Create Neutron external uplink interface on all hosts
   ansible.builtin.command: "ip link add {{ openstack_kolla_external_uplink_interface_name }} type dummy"
   loop: "{{ openstack_kolla_external_uplink_interface_check.results | default([]) }}"
@@ -98,6 +111,10 @@
     loop_var: openstack_kolla_external_uplink_result
   delegate_to: "{{ openstack_kolla_external_uplink_result.openstack_kolla_host }}"
   become: true
+  register: openstack_kolla_external_uplink_create
+  failed_when: >-
+    openstack_kolla_external_uplink_create.rc != 0 and
+    ('File exists' not in (openstack_kolla_external_uplink_create.stderr | default('')))
   when:
     - openstack_kolla_prepare_external_uplink_interface | bool
     - openstack_kolla_neutron_external_interface == openstack_kolla_external_uplink_interface_name
