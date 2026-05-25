@@ -26,6 +26,7 @@ runs:
 
         if [[ -n "$SECRET_NAME" ]]; then
           PRIVATE_KEY="$(gcloud secrets versions access latest --secret="$SECRET_NAME")"
+          echo "::add-mask::${PRIVATE_KEY}"
         fi
 
         install -d -m 700 ~/.ssh
