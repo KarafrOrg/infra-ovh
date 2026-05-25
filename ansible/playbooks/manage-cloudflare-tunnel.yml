@@ -1,5 +1,5 @@
 ---
-# Manage a Cloudflare tunnel on the primary network node.
+# Manage a Cloudflare tunnel on all hosts in the selected target group.
 #
 # Required extra-vars:
 #   cloudflare_tunnel_name        - logical name for the tunnel (used as container suffix)
@@ -10,14 +10,14 @@
 #
 # Optional extra-vars:
 #   cloudflare_tunnel_image       - container image (default: cloudflare/cloudflared:latest)
-#   cloudflare_tunnel_target_host - host to run the tunnel on (default: first network node)
+#   cloudflare_tunnel_host_group  - inventory group to target (default in task vars below)
 
 - name: Manage Cloudflare tunnel
   hosts: all
   gather_facts: false
   become: true
   tasks:
-    - name: Apply cloudflare-tunnel role on primary network node
+    - name: Apply cloudflare-tunnel role on all hosts in target group
       ansible.builtin.include_role:
         name: cloudflare-tunnel
       vars:
@@ -25,4 +25,4 @@
       when:
         - cloudflare_tunnel_host_group in groups
         - groups[cloudflare_tunnel_host_group] | length > 0
-        - inventory_hostname == groups[cloudflare_tunnel_host_group][0]
+        - inventory_hostname in groups[cloudflare_tunnel_host_group]
