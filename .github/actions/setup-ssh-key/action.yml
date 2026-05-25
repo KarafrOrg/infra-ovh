@@ -19,6 +19,8 @@ runs:
         SECRET_NAME: ${{ inputs.secret-name }}
       # language=bash
       run: |
+        set -euo pipefail
+
         if [[ -z "$PRIVATE_KEY" && -z "$SECRET_NAME" ]]; then
           echo "Either private-key or secret-name input is required." >&2
           exit 1
@@ -26,13 +28,20 @@ runs:
 
         if [[ -n "$SECRET_NAME" ]]; then
           PRIVATE_KEY="$(gcloud secrets versions access latest --secret="$SECRET_NAME")"
-          echo "::add-mask::${PRIVATE_KEY}"
-          echo "::add-mask:: $(printf '%s\n' $PRIVATE_KEY)"
         fi
 
+        # Mask the full secret and each individual line to avoid log leaks.
+        echo "::add-mask::${PRIVATE_KEY}"
+        while IFS= read -r key_line; do
+          [[ -z "$key_line" ]] && continue
+          echo "::add-mask::${key_line}"
+        done <<< "$PRIVATE_KEY"
+
         install -d -m 700 ~/.ssh
-        printf '%s\n' "$PRIVATE_KEY" > ~/.ssh/id_ed25519
+        printf '%s\n' "$PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
+        ssh-keygen -y -f ~/.ssh/id_ed25519 > /dev/null
+        echo "ANSIBLE_PRIVATE_KEY_FILE=${HOME}/.ssh/id_ed25519" >> "$GITHUB_ENV"
         cat > ~/.ssh/config <<'CFG'
         Host *
           StrictHostKeyChecking no

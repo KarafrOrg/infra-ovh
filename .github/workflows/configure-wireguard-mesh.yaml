@@ -62,7 +62,8 @@ jobs:
           ANSIBLE_CONFIG: ansible/ansible.cfg
         # language=bash
         run: |
+          set -euo pipefail
           ansible-playbook \
             -i ansible/scripts/inventory_from_tfvars.py \
             ansible/playbooks/wireguard.yml \
-            --private-key "${ANSIBLE_PRIVATE_KEY_FILE}"
+            --private-key "${ANSIBLE_PRIVATE_KEY_FILE:-$HOME/.ssh/id_ed25519}"
