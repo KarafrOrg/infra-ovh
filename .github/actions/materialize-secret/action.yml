@@ -55,8 +55,16 @@ runs:
         fi
 
         secret_value="$(gcloud secrets versions access latest --secret="$secret_name" "${project_flag[@]}")"
-        
-        echo "::add-mask::${secret_value}"
+
+        # Mask multiline secrets safely for GitHub workflow commands.
+        escaped_secret_value="${secret_value//'%'/'%25'}"
+        escaped_secret_value="${escaped_secret_value//$'\r'/'%0D'}"
+        escaped_secret_value="${escaped_secret_value//$'\n'/'%0A'}"
+        echo "::add-mask::${escaped_secret_value}"
+        while IFS= read -r secret_line; do
+          [[ -z "$secret_line" ]] && continue
+          echo "::add-mask::${secret_line}"
+        done <<< "$secret_value"
         
         if [[ -n "$destination_path" ]]; then
           mkdir -p "$(dirname "$destination_path")"
