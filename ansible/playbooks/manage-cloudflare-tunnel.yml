@@ -22,8 +22,7 @@
         name: cloudflare-tunnel
       vars:
         cloudflare_tunnel_host_group: >-
-          {{ 'network' if ('network' in groups and groups['network'] | length > 0)
-             else 'ovh_dedicated_servers' }}
+          {{ 'baremetal' if ('baremetal' in groups and groups['baremetal'] | length > 0) else 'ovh_dedicated_servers' }}
       when:
         - cloudflare_tunnel_host_group in groups
         - groups[cloudflare_tunnel_host_group] | length > 0
