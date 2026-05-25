@@ -10,19 +10,16 @@
 #
 # Optional extra-vars:
 #   cloudflare_tunnel_image       - container image (default: cloudflare/cloudflared:latest)
-#   cloudflare_tunnel_host_group  - inventory group to target (default in task vars below)
+#   cloudflare_tunnel_host_group  - inventory group to target (default: openstack_kolla_hosts;
+#                                   falls back to all hosts if missing)
 
 - name: Manage Cloudflare tunnel
   hosts: all
   gather_facts: false
   become: true
   tasks:
-    - name: Apply cloudflare-tunnel role on all hosts in target group
+    - name: Apply cloudflare-tunnel role on target hosts
       ansible.builtin.include_role:
         name: cloudflare-tunnel
-      vars:
-        cloudflare_tunnel_host_group: openstack_kolla_hosts
       when:
-        - cloudflare_tunnel_host_group in groups
-        - groups[cloudflare_tunnel_host_group] | length > 0
-        - inventory_hostname in groups[cloudflare_tunnel_host_group]
+        - inventory_hostname in groups.get((cloudflare_tunnel_host_group | default('openstack_kolla_hosts')), groups['all'])
