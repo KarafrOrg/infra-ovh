@@ -229,6 +229,7 @@
     - "{{ openstack_kolla_node_custom_config_dir }}"
     - "{{ openstack_kolla_node_custom_config_dir }}/octavia"
     - "{{ openstack_kolla_node_custom_config_dir }}/prometheus/prometheus.yml.d"
+    - "{{ openstack_kolla_node_custom_config_dir }}/keepalived"
 
 - name: Install readlink compatibility shim for kolla-ansible
   ansible.builtin.copy:
@@ -278,6 +279,19 @@
     src: prometheus-remote-write.yml.j2
     dest: "{{ openstack_kolla_node_custom_config_dir }}/prometheus/prometheus.yml.d/10-remote-write.yml"
     mode: "0644"
+
+- name: Render keepalived unicast override for wg0 loadbalancer
+  # wg0 is point-to-point and does not carry VRRP multicast, so kolla's
+  # default (multicast) keepalived config sits in fault state and never
+  # binds the VIPs. Drop a unicast-mode override into node_custom_config
+  # so kolla's loadbalancer role picks it up via with_first_found.
+  ansible.builtin.template:
+    src: keepalived.conf.j2
+    dest: "{{ openstack_kolla_node_custom_config_dir }}/keepalived/keepalived.conf"
+    mode: "0644"
+  when:
+    - openstack_kolla_enable_haproxy | bool
+    - openstack_kolla_enable_keepalived | bool
 
 - name: Check that Kolla passwords file is present
   ansible.builtin.stat:
