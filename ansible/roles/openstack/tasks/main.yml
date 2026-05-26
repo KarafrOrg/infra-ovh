@@ -44,12 +44,11 @@
     that:
       - openstack_kolla_role_control_hosts | default([]) | length == 1
       - openstack_kolla_role_compute_hosts | default([]) | length >= 1
-      - openstack_kolla_role_loadbalancer_hosts | default([]) | length <= 1
       - openstack_kolla_role_deployment_hosts | default([]) | length <= 1
     fail_msg: >-
       Invalid role labels for group '{{ openstack_kolla_target_group }}'.
-      Need exactly 1 control host and >=1 compute host, at most 1 loadbalancer
-      and 1 deployment host. Got
+      Need exactly 1 control host, >=1 compute host, at most 1 deployment
+      host. Got
       control={{ openstack_kolla_role_control_hosts | default([]) }},
       compute={{ openstack_kolla_role_compute_hosts | default([]) }},
       network={{ openstack_kolla_role_network_hosts | default([]) }},
@@ -63,8 +62,13 @@
   ansible.builtin.set_fact:
     openstack_kolla_controller_host: "{{ openstack_kolla_role_control_hosts | first }}"
     openstack_kolla_compute_hosts: "{{ openstack_kolla_role_compute_hosts | default([]) }}"
+    # Loadbalancer and network groups may contain multiple hosts (active/active
+    # HAProxy + keepalived). When no host is labelled we fall back to the
+    # controller so small clusters keep working.
+    openstack_kolla_loadbalancer_hosts: "{{ openstack_kolla_role_loadbalancer_hosts if (openstack_kolla_role_loadbalancer_hosts | default([]) | length > 0) else [openstack_kolla_role_control_hosts | first] }}"
+    openstack_kolla_network_hosts: "{{ openstack_kolla_role_network_hosts if (openstack_kolla_role_network_hosts | default([]) | length > 0) else [openstack_kolla_role_control_hosts | first] }}"
     # Singleton role slots fall back to the controller when their label
-    # isn't present anywhere, so smaller clusters keep working unchanged.
+    # isn't present anywhere.
     openstack_kolla_loadbalancer_host: "{{ (openstack_kolla_role_loadbalancer_hosts | default([]) | first) if (openstack_kolla_role_loadbalancer_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
     openstack_kolla_network_host: "{{ (openstack_kolla_role_network_hosts | default([]) | first) if (openstack_kolla_role_network_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
     openstack_kolla_monitoring_host: "{{ (openstack_kolla_role_monitoring_hosts | default([]) | first) if (openstack_kolla_role_monitoring_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
@@ -160,18 +164,6 @@
     openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_wireguard_ips | default(openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list) }}"
     openstack_kolla_wireguard_prefix: "{{ openstack_kolla_wireguard_prefix | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '')) }}"
     openstack_kolla_controller_public_ip: "{{ hostvars[openstack_kolla_controller_host].public_ip | default('') | trim }}"
-
-- name: Select loadbalancer host
-  ansible.builtin.set_fact:
-    # When HAProxy is enabled, prefer the dedicated deployment host so
-    # HAProxy doesn't fight controller services for the same wg0 ports.
-    # Falls back to the controller if no deployment-tagged host exists.
-    openstack_kolla_loadbalancer_host: "{{ (openstack_kolla_role_deployment_hosts | default([]) | first) if (openstack_kolla_enable_haproxy | bool and (openstack_kolla_role_deployment_hosts | default([]) | length) > 0) else openstack_kolla_controller_host }}"
-
-- name: Derive loadbalancer host addresses
-  ansible.builtin.set_fact:
-    openstack_kolla_loadbalancer_wireguard_ip: "{{ hostvars[openstack_kolla_loadbalancer_host].wireguard_address | regex_replace('/.*$', '') }}"
-    openstack_kolla_loadbalancer_public_ip: "{{ hostvars[openstack_kolla_loadbalancer_host].public_ip | default('') | trim }}"
 
 - name: Derive Prometheus target endpoints from discovered hosts
   ansible.builtin.set_fact:
@@ -280,15 +272,28 @@
     dest: "{{ openstack_kolla_node_custom_config_dir }}/prometheus/prometheus.yml.d/10-remote-write.yml"
     mode: "0644"
 
-- name: Render keepalived unicast override for wg0 loadbalancer
-  # wg0 is point-to-point and does not carry VRRP multicast, so kolla's
-  # default (multicast) keepalived config sits in fault state and never
-  # binds the VIPs. Drop a unicast-mode override into node_custom_config
-  # so kolla's loadbalancer role picks it up via with_first_found.
+- name: Ensure keepalived per-host config directory exists
+  ansible.builtin.file:
+    path: "{{ openstack_kolla_node_custom_config_dir }}/keepalived/{{ item }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ openstack_kolla_loadbalancer_hosts | default([]) }}"
+  when:
+    - openstack_kolla_enable_haproxy | bool
+    - openstack_kolla_enable_keepalived | bool
+
+- name: Render keepalived unicast override per loadbalancer host
+  # wg0 is point-to-point and does not carry VRRP multicast. We render one
+  # keepalived.conf per loadbalancer host with unicast peers pointing at
+  # the other LBs. Kolla's loadbalancer role picks the per-host file via
+  # with_first_found (node_custom_config/keepalived/<host>/keepalived.conf).
   ansible.builtin.template:
     src: keepalived.conf.j2
-    dest: "{{ openstack_kolla_node_custom_config_dir }}/keepalived/keepalived.conf"
+    dest: "{{ openstack_kolla_node_custom_config_dir }}/keepalived/{{ item }}/keepalived.conf"
     mode: "0644"
+  vars:
+    openstack_kolla_keepalived_target_host: "{{ item }}"
+  loop: "{{ openstack_kolla_loadbalancer_hosts | default([]) }}"
   when:
     - openstack_kolla_enable_haproxy | bool
     - openstack_kolla_enable_keepalived | bool
