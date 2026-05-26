@@ -47,6 +47,17 @@ dedicated_servers = {
       datacenter       = "eu-central-waw-a"
     }
   },
+  openstack-node5 = {
+    existing_server = true
+    ssh_key_secret  = "ovh-vps-ssh-public-key"
+    labels = {
+      role             = "compute"
+      service_name     = "ns3101881-ip-54-36-168-eu"
+      ip               = "54-36-168-184"
+      commercial_range = "ks-le-2"
+      datacenter       = "eu-central-waw-a"
+    }
+  },
 }
 
 # Secret Manager configuration

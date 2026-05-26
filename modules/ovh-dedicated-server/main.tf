@@ -50,7 +50,7 @@ resource "google_secret_manager_secret" "server_info" {
   secret_id = "${var.secret_prefix}-${each.key}-info"
 
   labels = merge(
-    try(each.value.labels, {}),
+    try(local.gcp_safe_labels[each.key], {}),
     {
       managed_by = "terraform"
       server_key = each.key
@@ -127,7 +127,7 @@ resource "google_pubsub_topic" "server_notifications" {
   name = "${var.notification_topic_prefix}-${each.key}"
 
   labels = merge(
-    try(each.value.labels, {}),
+    try(local.gcp_safe_labels[each.key], {}),
     {
       managed_by = "terraform"
       server_key = each.key
