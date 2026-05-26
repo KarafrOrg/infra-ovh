@@ -12,7 +12,10 @@ from pathlib import Path
 DEFAULT_TFVARS_PATH = "live/karafra-net/terraform.auto.tfvars"
 DEFAULT_GROUP_NAME = "ovh_dedicated_servers"
 DEFAULT_WIREGUARD_INTERNAL_NETWORK = "10.200.0.0/24"
-DEFAULT_WIREGUARD_EXTERNAL_NETWORK = "10.201.0.0/24"
+# External WireGuard subnet is opt-in only. The simplified networking model
+# routes external traffic via the host public IP, so this stays empty by
+# default. Set WIREGUARD_EXTERNAL_NETWORK to enable a second range.
+DEFAULT_WIREGUARD_EXTERNAL_NETWORK = ""
 DEFAULT_WIREGUARD_LISTEN_PORT = 51820
 DEFAULT_ANSIBLE_USER = "ubuntu"
 HYPHENATED_IPV4 = re.compile(r"^\d{1,3}(?:-\d{1,3}){3}$")
@@ -109,7 +112,9 @@ def build_inventory() -> dict:
 
         server_config = dedicated_servers[source_host_name] or {}
         labels = server_config.get("labels", {}) or {}
-        openstack_role = str(labels.get("role") or server_config.get("role") or "").strip().lower()
+        roles_raw = clean_wrapped_quotes(str(labels.get("role") or server_config.get("role") or "")).strip().lower()
+        openstack_roles = [r.strip() for r in roles_raw.split(",") if r.strip()]
+        openstack_role = openstack_roles[0] if openstack_roles else ""
         raw_public_ip = labels.get("ip") or server_config.get("ip")
         raw_service_name = labels.get("service_name") or server_config.get("service_name")
         public_ip = normalize_public_ip(raw_public_ip)
@@ -145,6 +150,7 @@ def build_inventory() -> dict:
             "wireguard_service_name": service_name,
             "wireguard_source_host_name": source_host_name,
             "openstack_role": openstack_role,
+            "openstack_roles": openstack_roles,
         }
 
     return {

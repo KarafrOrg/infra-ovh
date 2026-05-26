@@ -1,5 +1,5 @@
 # OVH configuration
-ovh_endpoint           = "ovh-ca"
+ovh_endpoint = "ovh-ca"
 
 # Dedicated servers configuration
 dedicated_servers = {
@@ -7,7 +7,7 @@ dedicated_servers = {
     existing_server = true
     ssh_key_secret  = "ovh-vps-ssh-public-key"
     labels = {
-      role             = "control"
+      role             = "control,monitoring,storage"
       service_name     = "ns510634-ip-198-27-70-net"
       ip               = "198-27-70-67"
       commercial_range = "ks-le-1"
@@ -32,6 +32,17 @@ dedicated_servers = {
       role             = "compute"
       service_name     = "ns3104389-ip-54-36-168-eu"
       ip               = "54-36-168-72"
+      commercial_range = "ks-le-2"
+      datacenter       = "eu-central-waw-a"
+    }
+  },
+  openstack-node4 = {
+    existing_server = true
+    ssh_key_secret  = "ovh-vps-ssh-public-key"
+    labels = {
+      role             = "deployment,network,loadbalancer,compute"
+      service_name     = "ns3073376-ip-79-137-68-eu"
+      ip               = "79-137-68-126"
       commercial_range = "ks-le-2"
       datacenter       = "eu-central-waw-a"
     }

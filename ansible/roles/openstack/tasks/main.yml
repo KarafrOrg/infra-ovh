@@ -9,32 +9,31 @@
       - openstack_kolla_hosts | length >= 2
     fail_msg: "Need at least 2 hosts in group '{{ openstack_kolla_target_group }}' for 1 controller + 1 compute."
 
-- name: Initialize role-based host lists
+- name: Build per-role host lists from inventory labels
   ansible.builtin.set_fact:
-    openstack_kolla_role_control_hosts: []
-    openstack_kolla_role_compute_hosts: []
+    # Each host's `openstack_roles` is a CSV-derived list (see
+    # inventory_from_tfvars.py). A host can carry multiple roles, e.g.
+    # `role = "deployment,network,loadbalancer,compute"`.
+    openstack_kolla_role_control_hosts: "{{ openstack_kolla_hosts | select('in', _control) | list }}"
+    openstack_kolla_role_compute_hosts: "{{ openstack_kolla_hosts | select('in', _compute) | list }}"
+    openstack_kolla_role_network_hosts: "{{ openstack_kolla_hosts | select('in', _network) | list }}"
+    openstack_kolla_role_loadbalancer_hosts: "{{ openstack_kolla_hosts | select('in', _loadbalancer) | list }}"
+    openstack_kolla_role_deployment_hosts: "{{ openstack_kolla_hosts | select('in', _deployment) | list }}"
+    openstack_kolla_role_monitoring_hosts: "{{ openstack_kolla_hosts | select('in', _monitoring) | list }}"
+    openstack_kolla_role_storage_hosts: "{{ openstack_kolla_hosts | select('in', _storage) | list }}"
+  vars:
+    _all_roles: "{{ openstack_kolla_hosts | map('extract', hostvars, 'openstack_roles') | list }}"
+    _control: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'control') | map(attribute='0') | list }}"
+    _compute: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'compute') | map(attribute='0') | list }}"
+    _network: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'network') | map(attribute='0') | list }}"
+    _loadbalancer: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'loadbalancer') | map(attribute='0') | list }}"
+    _deployment: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'deployment') | map(attribute='0') | list }}"
+    _monitoring: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'monitoring') | map(attribute='0') | list }}"
+    _storage: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'storage') | map(attribute='0') | list }}"
 
-- name: Build role-based controller/compute host lists
+- name: Fallback to preferred-host split when no roles labelled
   ansible.builtin.set_fact:
-    openstack_kolla_role_control_hosts: "{{ (openstack_kolla_role_control_hosts | default([])) + [item] }}"
-  loop: "{{ openstack_kolla_hosts }}"
-  when: >-
-    ((hostvars[item].openstack_role | default('') | trim | lower) == 'control')
-    or
-    ((hostvars[item].openstack_role | default('') | trim | lower) == '' and item == openstack_kolla_preferred_controller_host)
-
-- name: Build role-based compute host lists
-  ansible.builtin.set_fact:
-    openstack_kolla_role_compute_hosts: "{{ (openstack_kolla_role_compute_hosts | default([])) + [item] }}"
-  loop: "{{ openstack_kolla_hosts }}"
-  when: >-
-    ((hostvars[item].openstack_role | default('') | trim | lower) == 'compute')
-    or
-    ((hostvars[item].openstack_role | default('') | trim | lower) == '' and item != openstack_kolla_preferred_controller_host)
-
-- name: Fallback to preferred-host split when role metadata not available
-  ansible.builtin.set_fact:
-    openstack_kolla_role_control_hosts: "{{ openstack_kolla_hosts | select('equalto', openstack_kolla_preferred_controller_host) | list if (openstack_kolla_preferred_controller_host in openstack_kolla_hosts) else [openstack_kolla_hosts[0]] }}"
+    openstack_kolla_role_control_hosts: "{{ [openstack_kolla_preferred_controller_host] if (openstack_kolla_preferred_controller_host in openstack_kolla_hosts) else [openstack_kolla_hosts[0]] }}"
     openstack_kolla_role_compute_hosts: "{{ openstack_kolla_hosts | reject('equalto', (openstack_kolla_preferred_controller_host if (openstack_kolla_preferred_controller_host in openstack_kolla_hosts) else openstack_kolla_hosts[0])) | list }}"
   when:
     - (openstack_kolla_role_control_hosts | default([]) | length) == 0
@@ -45,17 +44,32 @@
     that:
       - openstack_kolla_role_control_hosts | default([]) | length == 1
       - openstack_kolla_role_compute_hosts | default([]) | length >= 1
-      - (openstack_kolla_role_control_hosts | default([]) | length) + (openstack_kolla_role_compute_hosts | default([]) | length) == (openstack_kolla_hosts | length)
+      - openstack_kolla_role_loadbalancer_hosts | default([]) | length <= 1
+      - openstack_kolla_role_deployment_hosts | default([]) | length <= 1
     fail_msg: >-
-      Invalid role split for '{{ openstack_kolla_target_group }}'.
-      Found control={{ openstack_kolla_role_control_hosts | default([]) }},
+      Invalid role labels for group '{{ openstack_kolla_target_group }}'.
+      Need exactly 1 control host and >=1 compute host, at most 1 loadbalancer
+      and 1 deployment host. Got
+      control={{ openstack_kolla_role_control_hosts | default([]) }},
       compute={{ openstack_kolla_role_compute_hosts | default([]) }},
+      network={{ openstack_kolla_role_network_hosts | default([]) }},
+      loadbalancer={{ openstack_kolla_role_loadbalancer_hosts | default([]) }},
+      deployment={{ openstack_kolla_role_deployment_hosts | default([]) }},
+      monitoring={{ openstack_kolla_role_monitoring_hosts | default([]) }},
+      storage={{ openstack_kolla_role_storage_hosts | default([]) }},
       all={{ openstack_kolla_hosts }}.
 
-- name: Select controller and compute nodes from roles
+- name: Select controller / compute / role-specific hosts
   ansible.builtin.set_fact:
-    openstack_kolla_controller_host: "{{ (openstack_kolla_role_control_hosts | first) }}"
-    openstack_kolla_compute_hosts: "{{ openstack_kolla_hosts | reject('equalto', (openstack_kolla_role_control_hosts | first)) | list }}"
+    openstack_kolla_controller_host: "{{ openstack_kolla_role_control_hosts | first }}"
+    openstack_kolla_compute_hosts: "{{ openstack_kolla_role_compute_hosts | default([]) }}"
+    # Singleton role slots fall back to the controller when their label
+    # isn't present anywhere, so smaller clusters keep working unchanged.
+    openstack_kolla_loadbalancer_host: "{{ (openstack_kolla_role_loadbalancer_hosts | default([]) | first) if (openstack_kolla_role_loadbalancer_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
+    openstack_kolla_network_host: "{{ (openstack_kolla_role_network_hosts | default([]) | first) if (openstack_kolla_role_network_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
+    openstack_kolla_monitoring_host: "{{ (openstack_kolla_role_monitoring_hosts | default([]) | first) if (openstack_kolla_role_monitoring_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
+    openstack_kolla_storage_host: "{{ (openstack_kolla_role_storage_hosts | default([]) | first) if (openstack_kolla_role_storage_hosts | default([]) | length > 0) else openstack_kolla_role_control_hosts | first }}"
+    openstack_kolla_deployment_host: "{{ (openstack_kolla_deployment_host | default('') | trim) if (openstack_kolla_deployment_host | default('') | trim | length > 0) else ((openstack_kolla_role_deployment_hosts | default([]) | first) if (openstack_kolla_role_deployment_hosts | default([]) | length > 0) else (openstack_kolla_role_control_hosts | first)) }}"
 
 - name: Validate controller networking facts
   ansible.builtin.assert:
@@ -143,9 +157,21 @@
   ansible.builtin.set_fact:
     openstack_kolla_wireguard_host_ips: "{{ openstack_kolla_wireguard_host_ips | default(openstack_kolla_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list) }}"
     openstack_kolla_controller_wireguard_ip: "{{ openstack_kolla_controller_wireguard_ip | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) }}"
-    openstack_kolla_controller_wireguard_external_ip: "{{ openstack_kolla_controller_wireguard_external_ip | default((hostvars[openstack_kolla_controller_host].wireguard_external_address | default('') | regex_replace('/.*$', '')) if (hostvars[openstack_kolla_controller_host].wireguard_external_address | default('') | length > 0) else (hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', ''))) }}"
     openstack_kolla_compute_wireguard_ips: "{{ openstack_kolla_compute_wireguard_ips | default(openstack_kolla_compute_hosts | map('extract', hostvars, 'wireguard_address') | map('regex_replace', '/.*$', '') | list) }}"
     openstack_kolla_wireguard_prefix: "{{ openstack_kolla_wireguard_prefix | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('\\.[0-9]+/.*$', '')) }}"
+    openstack_kolla_controller_public_ip: "{{ hostvars[openstack_kolla_controller_host].public_ip | default('') | trim }}"
+
+- name: Select loadbalancer host
+  ansible.builtin.set_fact:
+    # When HAProxy is enabled, prefer the dedicated deployment host so
+    # HAProxy doesn't fight controller services for the same wg0 ports.
+    # Falls back to the controller if no deployment-tagged host exists.
+    openstack_kolla_loadbalancer_host: "{{ (openstack_kolla_role_deployment_hosts | default([]) | first) if (openstack_kolla_enable_haproxy | bool and (openstack_kolla_role_deployment_hosts | default([]) | length) > 0) else openstack_kolla_controller_host }}"
+
+- name: Derive loadbalancer host addresses
+  ansible.builtin.set_fact:
+    openstack_kolla_loadbalancer_wireguard_ip: "{{ hostvars[openstack_kolla_loadbalancer_host].wireguard_address | regex_replace('/.*$', '') }}"
+    openstack_kolla_loadbalancer_public_ip: "{{ hostvars[openstack_kolla_loadbalancer_host].public_ip | default('') | trim }}"
 
 - name: Derive Prometheus target endpoints from discovered hosts
   ansible.builtin.set_fact:
@@ -161,16 +187,24 @@
 
 - name: Compute Kolla VIP addresses
   ansible.builtin.set_fact:
-    openstack_kolla_internal_vip_address: "{{ (openstack_kolla_internal_vip_override | default('')) if (openstack_kolla_internal_vip_override | default('') | length > 0) else ((hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')) if (openstack_kolla_use_controller_ip_as_vip | default(false) | bool) else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_internal_vip_host_octet)) }}"
-    openstack_kolla_external_vip_address: "{{ (openstack_kolla_external_vip_override | default('')) if (openstack_kolla_external_vip_override | default('') | length > 0) else ((openstack_kolla_controller_wireguard_external_ip | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', ''))) if (openstack_kolla_use_controller_ip_as_vip | default(false) | bool) else (openstack_kolla_wireguard_prefix ~ '.' ~ openstack_kolla_external_vip_host_octet)) }}"
-    openstack_kolla_database_address: "{{ (openstack_kolla_database_address_override | default('')) if (openstack_kolla_database_address_override | default('') | length > 0) else openstack_kolla_controller_wireguard_ip }}"
+    # Internal API traffic terminates on the loadbalancer host's WireGuard IP
+    # (HAProxy when enabled, otherwise the controller's own wg0 IP).
+    # External endpoint URLs use the loadbalancer host's public IP / FQDN.
+    # The database stays on the controller and is reached directly by HAProxy
+    # / API services over WireGuard.
+    openstack_kolla_internal_vip_address: "{{ openstack_kolla_loadbalancer_wireguard_ip }}"
+    openstack_kolla_external_vip_address: "{{ openstack_kolla_loadbalancer_public_ip if (openstack_kolla_loadbalancer_public_ip | length > 0) else openstack_kolla_loadbalancer_wireguard_ip }}"
+    openstack_kolla_database_address: "{{ openstack_kolla_controller_wireguard_ip }}"
 
-- name: Validate Kolla VIP addresses are free in WireGuard subnet
+- name: Validate Kolla VIP addresses
   ansible.builtin.assert:
     that:
-      - (openstack_kolla_internal_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_internal_vip_address in [(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')), (openstack_kolla_controller_wireguard_external_ip | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', '')))])
-      - (openstack_kolla_external_vip_address not in openstack_kolla_wireguard_host_ips) or (openstack_kolla_use_controller_ip_as_vip | bool and openstack_kolla_external_vip_address == (openstack_kolla_controller_wireguard_external_ip | default(hostvars[openstack_kolla_controller_host].wireguard_address | regex_replace('/.*$', ''))))
-    fail_msg: "Computed Kolla VIP collides with host WireGuard IPs: {{ openstack_kolla_wireguard_host_ips }}"
+      - openstack_kolla_internal_vip_address | length > 0
+      - openstack_kolla_external_vip_address | length > 0
+      - openstack_kolla_database_address | length > 0
+    fail_msg: >-
+      Failed to derive Kolla addresses from inventory. internal={{ openstack_kolla_internal_vip_address }},
+      external={{ openstack_kolla_external_vip_address }}, database={{ openstack_kolla_database_address }}.
 
 - name: Ensure Kolla working directories exist
   ansible.builtin.file:

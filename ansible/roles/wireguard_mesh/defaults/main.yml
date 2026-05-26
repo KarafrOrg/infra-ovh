@@ -6,7 +6,10 @@ wireguard_packages:
   - wireguard-tools
 wireguard_listen_port: 51820
 wireguard_internal_network: 10.44.0.0/24
-wireguard_external_network: 10.45.0.0/24
+# External WireGuard subnet is opt-in. Leave empty for the simple model
+# (internal=WireGuard, external=public IP). Set to a non-overlapping CIDR
+# (e.g. 10.45.0.0/24) only if a second range is genuinely needed.
+wireguard_external_network: ""
 wireguard_network: "{{ wireguard_internal_network }}"
 wireguard_persistent_keepalive: 25
 wireguard_enable_ip_forwarding: true
