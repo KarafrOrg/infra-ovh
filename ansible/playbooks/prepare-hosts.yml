@@ -5,7 +5,15 @@
   become: true
   vars:
     openstack_kolla_target_group: ovh_dedicated_servers
-    openstack_controller_host: "{{ (groups[openstack_kolla_target_group] | sort)[0] }}"
+    openstack_controller_host: >-
+      {{ (groups[openstack_kolla_target_group]
+          | map('extract', hostvars)
+          | selectattr('openstack_roles', 'defined')
+          | selectattr('openstack_roles', 'contains', 'control')
+          | map(attribute='inventory_hostname')
+          | list
+          | first)
+         | default((groups[openstack_kolla_target_group] | sort)[0]) }}
   tasks:
     - name: Stop host libvirt daemons that conflict with nova_libvirt container
       ansible.builtin.systemd:
@@ -55,25 +63,66 @@
         - inventory_hostname != openstack_controller_host
         - nova_libvirt_container_id.stdout | trim != ""
 
-- name: Prepare control node for MariaDB container lifecycle
+- name: Clean up stale MariaDB containers on non-controller hosts
+  # MariaDB must only run on the [control] host. Any leftover mariadb /
+  # mariadb_bootstrap container on another node (from a previous deploy with
+  # a different inventory layout) will keep bind-address pointing at the
+  # wrong wg IP and prevent Kolla from converging. We don't touch the
+  # controller here - kolla-ansible recreates that container itself.
   hosts: ovh_dedicated_servers
   gather_facts: false
   become: true
   vars:
     openstack_kolla_target_group: ovh_dedicated_servers
-    openstack_controller_host: "{{ (groups[openstack_kolla_target_group] | sort)[0] }}"
+    openstack_controller_host: >-
+      {{ (groups[openstack_kolla_target_group]
+          | map('extract', hostvars)
+          | selectattr('openstack_roles', 'defined')
+          | selectattr('openstack_roles', 'contains', 'control')
+          | map(attribute='inventory_hostname')
+          | list
+          | first)
+         | default((groups[openstack_kolla_target_group] | sort)[0]) }}
   tasks:
-    - name: Check if stale mariadb container exists
+    - name: Detect Docker on host (skip cleanup tasks if missing)
+      ansible.builtin.command: docker info
+      register: prepare_docker_info
+      changed_when: false
+      failed_when: false
+
+    - name: Remove stale MariaDB containers on non-controller hosts
+      ansible.builtin.command: "docker rm -f {{ item }}"
+      loop:
+        - mariadb
+        - mariadb_bootstrap
+        - mariadb_clustercheck
+      changed_when: false
+      failed_when: false
+      when:
+        - inventory_hostname != openstack_controller_host
+        - prepare_docker_info.rc == 0
+
+    - name: Remove stale MariaDB config on non-controller hosts
+      ansible.builtin.file:
+        path: /etc/kolla/mariadb
+        state: absent
+      when: inventory_hostname != openstack_controller_host
+
+    - name: Check if stale mariadb container exists on the controller
       ansible.builtin.command: docker ps -a --filter name=^/mariadb$ --format '{{"{{.ID}}"}}'
       register: mariadb_container_id
       changed_when: false
-      when: inventory_hostname == openstack_controller_host
+      failed_when: false
+      when:
+        - inventory_hostname == openstack_controller_host
+        - prepare_docker_info.rc == 0
 
-    - name: Remove stale mariadb container name before Kolla deploy
+    - name: Remove stale mariadb container name on controller before Kolla deploy
       ansible.builtin.command: docker rm -f mariadb
       when:
         - inventory_hostname == openstack_controller_host
-        - mariadb_container_id.stdout | trim != ""
+        - prepare_docker_info.rc == 0
+        - mariadb_container_id.stdout | default('') | trim != ""
 
 - name: Prepare Open vSwitch hosts for containerized OVS
   hosts: ovh_dedicated_servers
