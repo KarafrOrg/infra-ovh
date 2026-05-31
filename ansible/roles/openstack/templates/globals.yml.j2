@@ -17,6 +17,7 @@ node_custom_config: "{{ openstack_kolla_node_custom_config_dir }}"
 
 enable_horizon: "{{ openstack_kolla_enable_horizon | ternary('yes', 'no') }}"
 enable_haproxy: "{{ openstack_kolla_enable_haproxy | ternary('yes', 'no') }}"
+enable_external_mariadb_load_balancer: "{{ openstack_kolla_enable_haproxy | ternary('yes', 'no') }}"
 enable_proxysql: "{{ openstack_kolla_enable_proxysql | ternary('yes', 'no') }}"
 enable_prometheus: "{{ openstack_kolla_enable_prometheus | ternary('yes', 'no') }}"
 enable_grafana: "{{ openstack_kolla_enable_grafana | ternary('yes', 'no') }}"
