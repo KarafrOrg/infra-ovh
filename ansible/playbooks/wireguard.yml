@@ -12,5 +12,20 @@
     - name: Gather facts
       ansible.builtin.setup:
 
+    - name: Find the first loadbalancer host for VIP routing
+      ansible.builtin.set_fact:
+        _wireguard_lb_host: "{{ item }}"
+      loop: "{{ groups['ovh_dedicated_servers'] | sort }}"
+      when:
+        - _wireguard_lb_host is not defined
+        - "'loadbalancer' in (hostvars[item]['openstack_roles'] | default([]))"
+      run_once: true
+
   roles:
     - role: wireguard_mesh
+  vars:
+    wireguard_virtual_ips: >-
+      {{ [
+        {"ip": wireguard_internal_network | regex_replace('\.\d+/\d+$', '.250/32'), "owner": _wireguard_lb_host | default('')},
+        {"ip": wireguard_internal_network | regex_replace('\.\d+/\d+$', '.251/32'), "owner": _wireguard_lb_host | default('')}
+      ] if (_wireguard_lb_host | default('')) | length > 0 else [] }}

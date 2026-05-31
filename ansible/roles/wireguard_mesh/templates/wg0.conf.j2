@@ -7,7 +7,7 @@ SaveConfig = false
 {% for peer in ansible_play_hosts_all | sort if peer != inventory_hostname %}
 [Peer]
 PublicKey = {{ hostvars[peer].wireguard_public_key }}
-AllowedIPs = {{ [hostvars[peer].wireguard_address | regex_replace('/\d+$', '/32'), (hostvars[peer].wireguard_external_address | default('') | regex_replace('/\d+$', '/32'))] | reject('equalto', '') | join(', ') }}
+AllowedIPs = {{ ([hostvars[peer].wireguard_address | regex_replace('/\d+$', '/32'), (hostvars[peer].wireguard_external_address | default('') | regex_replace('/\d+$', '/32'))] + (wireguard_virtual_ips | default([]) | selectattr('owner', 'equalto', peer) | map(attribute='ip') | list)) | reject('equalto', '') | join(', ') }}
 Endpoint = {{ hostvars[peer].wireguard_endpoint | default(hostvars[peer].ansible_host) }}:{{ hostvars[peer].wireguard_listen_port | default(wireguard_listen_port) }}
 PersistentKeepalive = {{ wireguard_persistent_keepalive }}
 

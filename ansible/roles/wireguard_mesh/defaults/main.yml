@@ -18,3 +18,8 @@ wireguard_service_enabled: true
 wireguard_service_state: started
 wireguard_create_external_uplink_interface: true
 wireguard_external_uplink_interface_name: ext-br
+# List of virtual IP addresses (e.g. keepalived VIPs) that float across hosts.
+# Each entry is { ip: "10.200.0.250/32", owner: "openstack_node4" } where
+# owner is the inventory hostname whose WireGuard peer gets the AllowedIPs
+# entry on all other nodes. Used for Kolla HAProxy/keepalived VIPs.
+wireguard_virtual_ips: []
