@@ -13,6 +13,15 @@
       loop: "{{ groups['ovh_dedicated_servers'] }}"
       loop_control:
         label: "{{ hostvars[item].ansible_facts.hostname }}"
+      register: etc_hosts_result
+
+    - name: Restart kolla_toolbox container to pick up /etc/hosts changes
+      ansible.builtin.shell: |
+        for c in $(docker ps -q); do
+          docker cp /etc/hosts "$c":/etc/hosts
+        done
+      when: etc_hosts_result is changed
+      failed_when: false
 
 - name: Prepare compute hosts for containerized libvirt
   hosts: ovh_dedicated_servers
