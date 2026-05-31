@@ -124,6 +124,33 @@
         - prepare_docker_info.rc == 0
         - mariadb_container_id.stdout | default('') | trim != ""
 
+    - name: Check if mariadb container is running on controller
+      ansible.builtin.command: docker ps --filter name=^/mariadb$ --filter status=running --format '{{"{{.ID}}"}}'
+      register: mariadb_running_id
+      changed_when: false
+      failed_when: false
+      when:
+        - inventory_hostname == openstack_controller_host
+        - prepare_docker_info.rc == 0
+
+    - name: Check if stale mariadb Docker volume exists on controller
+      ansible.builtin.command: docker volume inspect mariadb
+      register: mariadb_volume_check
+      changed_when: false
+      failed_when: false
+      when:
+        - inventory_hostname == openstack_controller_host
+        - prepare_docker_info.rc == 0
+        - mariadb_running_id.stdout | default('') | trim == ""
+
+    - name: Remove orphaned mariadb volume so Kolla bootstraps fresh
+      ansible.builtin.command: docker volume rm mariadb
+      when:
+        - inventory_hostname == openstack_controller_host
+        - prepare_docker_info.rc == 0
+        - mariadb_running_id.stdout | default('') | trim == ""
+        - mariadb_volume_check.rc | default(1) == 0
+
 - name: Prepare Open vSwitch hosts for containerized OVS
   hosts: ovh_dedicated_servers
   gather_facts: false
