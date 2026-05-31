@@ -1,4 +1,19 @@
 ---
+- name: Ensure hostnames resolve to WireGuard (api_interface) addresses
+  hosts: ovh_dedicated_servers
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Map each node hostname to its WireGuard IP in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '.*\b{{ hostvars[item].ansible_facts.hostname }}\b'
+        line: "{{ hostvars[item].wireguard_address | regex_replace('/.*$', '') }}  {{ hostvars[item].ansible_facts.hostname }}"
+        state: present
+      loop: "{{ groups['ovh_dedicated_servers'] }}"
+      loop_control:
+        label: "{{ hostvars[item].ansible_facts.hostname }}"
+
 - name: Prepare compute hosts for containerized libvirt
   hosts: ovh_dedicated_servers
   gather_facts: false
