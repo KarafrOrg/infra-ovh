@@ -14,22 +14,15 @@
     # Each host's `openstack_roles` is a CSV-derived list (see
     # inventory_from_tfvars.py). A host can carry multiple roles, e.g.
     # `role = "deployment,network,loadbalancer,compute"`.
-    openstack_kolla_role_control_hosts: "{{ openstack_kolla_hosts | select('in', _control) | list }}"
-    openstack_kolla_role_compute_hosts: "{{ openstack_kolla_hosts | select('in', _compute) | list }}"
-    openstack_kolla_role_network_hosts: "{{ openstack_kolla_hosts | select('in', _network) | list }}"
-    openstack_kolla_role_loadbalancer_hosts: "{{ openstack_kolla_hosts | select('in', _loadbalancer) | list }}"
-    openstack_kolla_role_deployment_hosts: "{{ openstack_kolla_hosts | select('in', _deployment) | list }}"
-    openstack_kolla_role_monitoring_hosts: "{{ openstack_kolla_hosts | select('in', _monitoring) | list }}"
-    openstack_kolla_role_storage_hosts: "{{ openstack_kolla_hosts | select('in', _storage) | list }}"
+    openstack_kolla_role_control_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'control') | map(attribute='key') | list }}"
+    openstack_kolla_role_compute_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'compute') | map(attribute='key') | list }}"
+    openstack_kolla_role_network_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'network') | map(attribute='key') | list }}"
+    openstack_kolla_role_loadbalancer_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'loadbalancer') | map(attribute='key') | list }}"
+    openstack_kolla_role_deployment_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'deployment') | map(attribute='key') | list }}"
+    openstack_kolla_role_monitoring_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'monitoring') | map(attribute='key') | list }}"
+    openstack_kolla_role_storage_hosts: "{{ _roles_map | dict2items | selectattr('value', 'contains', 'storage') | map(attribute='key') | list }}"
   vars:
-    _all_roles: "{{ openstack_kolla_hosts | map('extract', hostvars, 'openstack_roles') | list }}"
-    _control: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'control') | map(attribute='0') | list }}"
-    _compute: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'compute') | map(attribute='0') | list }}"
-    _network: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'network') | map(attribute='0') | list }}"
-    _loadbalancer: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'loadbalancer') | map(attribute='0') | list }}"
-    _deployment: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'deployment') | map(attribute='0') | list }}"
-    _monitoring: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'monitoring') | map(attribute='0') | list }}"
-    _storage: "{{ openstack_kolla_hosts | zip(_all_roles) | selectattr('1', 'contains', 'storage') | map(attribute='0') | list }}"
+    _roles_map: "{{ dict(openstack_kolla_hosts | zip(openstack_kolla_hosts | map('extract', hostvars, 'openstack_roles') | list)) }}"
 
 - name: Fallback to preferred-host split when no roles labelled
   ansible.builtin.set_fact:

@@ -233,6 +233,7 @@ jobs:
               "python", "ansible/scripts/inventory_from_tfvars.py", "--list"
           ], text=True))
           expected_all_hosts = sorted(set(source.get("ovh_dedicated_servers", {}).get("hosts", [])))
+          source_hostvars = source.get("_meta", {}).get("hostvars", {})
 
           control_hosts = sorted(set(data.get("control", {}).get("hosts", [])))
           compute_hosts = sorted(set(data.get("compute", {}).get("hosts", [])))
@@ -250,8 +251,11 @@ jobs:
               print(f"Expected exactly 1 controller, got: {control_hosts}", file=sys.stderr)
               sys.exit(1)
 
-          controller = control_hosts[0]
-          expected_compute = sorted([h for h in expected_all_hosts if h != controller])
+          # Derive expected compute hosts from role labels in tfvars
+          expected_compute = sorted([
+              h for h in expected_all_hosts
+              if "compute" in source_hostvars.get(h, {}).get("openstack_roles", [])
+          ])
           if compute_hosts != expected_compute:
               print(
                   f"Compute group mismatch: expected {expected_compute}, got {compute_hosts}",
@@ -261,9 +265,11 @@ jobs:
                   "source_hosts": expected_all_hosts,
                   "control_hosts": control_hosts,
                   "compute_hosts": compute_hosts,
+                  "expected_compute": expected_compute,
               }, indent=2), file=sys.stderr)
               sys.exit(1)
 
+          controller = control_hosts[0]
           print(f"Controller={controller}; compute hosts={compute_hosts}")
           PY
 
