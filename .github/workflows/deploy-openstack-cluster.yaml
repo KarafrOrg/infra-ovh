@@ -33,6 +33,11 @@ on:
         required: true
         type: boolean
         default: true
+      kolla_stages:
+        description: "Comma-separated Kolla stages to run: bootstrap-servers,prechecks,pull,deploy,post-deploy"
+        required: true
+        type: string
+        default: "bootstrap-servers,prechecks,pull,deploy,post-deploy"
   workflow_run:
     workflows:
       - Configure WireGuard mesh
@@ -58,6 +63,7 @@ jobs:
       ENVIRONMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}
       TFVARS_PATH: live/${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'karafra-net' }}/terraform.auto.tfvars
       ANSIBLE_SSH_USER: ubuntu
+      KOLLA_STAGE_SET: ",${{ github.event_name == 'workflow_dispatch' && replace(inputs.kolla_stages, ' ', '') || 'bootstrap-servers,prechecks,pull,deploy,post-deploy' }},"
 
     steps:
       - name: Check out repository
@@ -295,29 +301,29 @@ jobs:
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: bootstrap-servers
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_bootstrap_servers }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_bootstrap_servers && contains(env.KOLLA_STAGE_SET, ',bootstrap-servers,') }}
 
       - name: Run Kolla-Ansible prechecks
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: prechecks
           extra-args: '--use-test-images'
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_pre_checks }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_pre_checks && contains(env.KOLLA_STAGE_SET, ',prechecks,') }}
 
       - name: Run Kolla-Ansible pull
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: pull
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_image_pull }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_image_pull && contains(env.KOLLA_STAGE_SET, ',pull,') }}
 
       - name: Run Kolla-Ansible deploy
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: deploy
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_deploy }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_deploy && contains(env.KOLLA_STAGE_SET, ',deploy,') }}
 
       - name: Run Kolla-Ansible post-deploy
         uses: ./.github/actions/run-kolla-ansible
         with:
           command: post-deploy
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_post_deploy }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_post_deploy && contains(env.KOLLA_STAGE_SET, ',post-deploy,') }}

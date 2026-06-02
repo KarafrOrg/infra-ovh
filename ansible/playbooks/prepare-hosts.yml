@@ -4,7 +4,18 @@
   gather_facts: true
   become: true
   tasks:
-    - name: Map each node hostname to its WireGuard IP in /etc/hosts
+    - name: Map each node inventory hostname to its WireGuard IP in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '.*\b{{ item }}\b'
+        line: "{{ hostvars[item].wireguard_address | regex_replace('/.*$', '') }}  {{ item }}"
+        state: present
+      loop: "{{ groups['ovh_dedicated_servers'] }}"
+      loop_control:
+        label: "{{ item }}"
+      register: etc_hosts_inventory_result
+
+    - name: Map each node system hostname to its WireGuard IP in /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
         regexp: '.*\b{{ hostvars[item].ansible_facts.hostname }}\b'
@@ -13,14 +24,12 @@
       loop: "{{ groups['ovh_dedicated_servers'] }}"
       loop_control:
         label: "{{ hostvars[item].ansible_facts.hostname }}"
-      register: etc_hosts_result
+      register: etc_hosts_system_result
 
-    - name: Restart kolla_toolbox container to pick up /etc/hosts changes
+    - name: Restart running containers so Docker regenerates /etc/hosts
       ansible.builtin.shell: |
-        for c in $(docker ps -q); do
-          docker cp /etc/hosts "$c":/etc/hosts
-        done
-      when: etc_hosts_result is changed
+        docker ps --format '{{"{{.Names}}"}}' | xargs -r -n1 docker restart
+      when: etc_hosts_inventory_result is changed or etc_hosts_system_result is changed
       failed_when: false
 
 - name: Prepare compute hosts for containerized libvirt
