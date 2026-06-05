@@ -64,4 +64,4 @@ jobs:
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}
-      token_gcp_secret: cloudflare-tunnel-token-openstack-nova
+      token_gcp_secret: cloudflare-tunnel-token-openstack-heat
