@@ -135,5 +135,3 @@ resource "google_pubsub_topic" "server_notifications" {
     }
   )
 }
-
-resource "" "" {}
