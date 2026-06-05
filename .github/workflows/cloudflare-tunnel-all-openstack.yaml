@@ -1,4 +1,4 @@
-name: Cloudflare tunnel - Openstack
+name: Cloudflare tunnel - All openstack services
 
 on:
   workflow_dispatch:
