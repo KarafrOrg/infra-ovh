@@ -36,50 +36,72 @@ jobs:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   keystone-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-keystone.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   octavia-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-octavia.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   placement-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-placement.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   cinder-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-cinder.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   designate-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-designate.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   glance-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-glance.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   neutron-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-neutron.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}
       state: ${{ github.event.inputs.state }}
+
   nova-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel-nova.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+
+  heat-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-heat.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+
+  heat-cfn-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-heat-cfn.yaml
     with:
       environment: ${{ github.event.inputs.environment }}
       mode: ${{ github.event.inputs.mode }}

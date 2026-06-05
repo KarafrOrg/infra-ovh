@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/cloudflare-tunnel.yaml
     with:
       environment: ${{ inputs.environment }}
-      tunnel_name: Cinder
+      tunnel_name: cinder
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}

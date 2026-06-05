@@ -43,7 +43,7 @@
 
 - name: Set container name fact
   ansible.builtin.set_fact:
-    _cloudflare_container_name: "cloudflared-{{ cloudflare_tunnel_name }}"
+    _cloudflare_container_name: "cloudflared_{{ cloudflare_tunnel_name }}"
 
 - name: Check for existing tunnel container
   ansible.builtin.command:

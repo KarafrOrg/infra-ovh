@@ -1,4 +1,4 @@
-name: Cloudflare tunnel - Designate
+name: Cloudflare tunnel - Heat
 
 on:
   workflow_dispatch:
@@ -9,9 +9,9 @@ on:
         default: karafra-net
         type: string
       origin_url:
-        description: Designate origin URL (used in quick mode)
+        description: Nova origin URL (used in quick mode)
         required: false
-        default: http://10.44.0.254:9001
+        default: http://10.44.0.254:8004
         type: string
       mode:
         description: Tunnel mode
@@ -37,9 +37,9 @@ on:
         default: karafra-net
         type: string
       origin_url:
-        description: Designate origin URL (used in quick mode)
+        description: Nova origin URL (used in quick mode)
         required: false
-        default: http://10.44.0.254:9001
+        default: http://10.44.0.254:8004
         type: string
       mode:
         description: Tunnel mode
@@ -56,12 +56,12 @@ permissions:
   id-token: write
 
 jobs:
-  designate-tunnel:
+  nova-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel.yaml
     with:
       environment: ${{ inputs.environment }}
-      tunnel_name: designate
+      tunnel_name: heat
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}
-      token_gcp_secret: cloudflare-tunnel-token-openstack-designate
+      token_gcp_secret: cloudflare-tunnel-token-openstack-nova

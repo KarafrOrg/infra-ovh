@@ -60,7 +60,7 @@ jobs:
     uses: ./.github/workflows/cloudflare-tunnel.yaml
     with:
       environment: ${{ inputs.environment }}
-      tunnel_name: Glance
+      tunnel_name: glance
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}
