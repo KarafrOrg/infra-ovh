@@ -1,5 +1,5 @@
 locals {
-  operating_system = "ubuntu2404-server_64"
+  operating_system = "byolinux_64"
 
   gcp_safe_labels = {
     for key, server in var.dedicated_servers :
