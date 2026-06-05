@@ -93,10 +93,11 @@ resource "ovh_dedicated_server_reinstall_task" "initial_server_reinstall" {
   os           = data.ovh_dedicated_installation_template.template.template_name
 
   customizations {
-    ssh_key                  = data.google_secret_manager_secret_version.ssh_key[each.key].secret_data
-    hostname                 = "${each.key}.karafra.net"
+    ssh_key  = data.google_secret_manager_secret_version.ssh_key[each.key].secret_data
+    hostname = "${each.key}.karafra.net"
     #post_installation_script = base64encode(templatefile("${path.module}/templates/post-install.sh.tftpl", {}))
-    image_url                = try(each.value.image_url, null)
+    image_url           = try(each.value.image_url, null)
+    efi_bootloader_path = "/EFI/BOOT/BOOTX64.EFI"
   }
 
   lifecycle {
