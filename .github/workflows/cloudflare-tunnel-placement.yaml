@@ -1,4 +1,4 @@
-name: Cloudflare tunnel - Horizon
+name: Cloudflare tunnel - Placement
 
 on:
   workflow_dispatch:
@@ -9,9 +9,9 @@ on:
         default: karafra-net
         type: string
       origin_url:
-        description: Horizon origin URL (used in quick mode)
+        description: Placement origin URL (used in quick mode)
         required: false
-        default: http://10.44.0.254:80
+        default: http://10.44.0.254:8778
         type: string
       mode:
         description: Tunnel mode
@@ -37,9 +37,9 @@ on:
         default: karafra-net
         type: string
       origin_url:
-        description: Horizon origin URL (used in quick mode)
+        description: Placement origin URL (used in quick mode)
         required: false
-        default: http://10.44.0.254:80
+        default: http://10.44.0.254:8778
         type: string
       mode:
         description: Tunnel mode
@@ -56,12 +56,12 @@ permissions:
   id-token: write
 
 jobs:
-  horizon-tunnel:
+  placement-tunnel:
     uses: ./.github/workflows/cloudflare-tunnel.yaml
     with:
       environment: ${{ inputs.environment }}
-      tunnel_name: horizon
+      tunnel_name: Placement
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}
-      token_gcp_secret: cloudflare-tunnel-token-openstack-dashboard
+      token_gcp_secret: cloudflare-tunnel-token-openstack-placement

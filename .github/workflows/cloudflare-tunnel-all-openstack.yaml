@@ -1,0 +1,86 @@
+name: Cloudflare tunnel - Openstack
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Terraform live environment directory under live/
+        required: true
+        default: karafra-net
+        type: string
+      mode:
+        description: Tunnel mode
+        required: false
+        default: token
+        type: choice
+        options:
+          - token
+          - quick
+      state:
+        description: Desired tunnel state
+        required: false
+        default: present
+        type: choice
+        options:
+          - present
+          - absent
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  horizon-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-horizon.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  keystone-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-keystone.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  octavia-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-octavia.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  placement-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-placement.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  cinder-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-cinder.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  designate-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-designate.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  glance-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-glance.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  neutron-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-neutron.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
+  nova-tunnel:
+    uses: ./.github/workflows/cloudflare-tunnel-nova.yaml
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      mode: ${{ github.event.inputs.mode }}
+      state: ${{ github.event.inputs.state }}
