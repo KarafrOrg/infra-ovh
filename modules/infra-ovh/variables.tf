@@ -17,7 +17,6 @@ variable "dedicated_servers" {
   description = "Map of OVH dedicated server configurations"
   type = map(object({
     boot_id          = optional(number)
-    image_url        = optional(string)
     monitoring       = optional(bool, true)
     state            = optional(string, "ok")
     commercial_range = optional(string, "eco")

@@ -2,7 +2,6 @@ variable "dedicated_servers" {
   description = "Map of dedicated server configurations"
   type = map(object({
     existing_server  = optional(bool, false)
-    image_url        = optional(string)
     commercial_range = optional(string, "eco")
     boot_id          = optional(number)
     monitoring       = optional(bool, true)
