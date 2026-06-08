@@ -116,7 +116,7 @@ jobs:
             extra_args+=(-e "cloudflare_tunnel_token=${CLOUDFLARE_TUNNEL_TOKEN}")
           fi
 
-          ansible-playbook \
+          uv run ansible-playbook \
             -i "$inventory_path" \
             ansible/playbooks/manage-cloudflare-tunnel.yml \
             --private-key ~/.ssh/id_ed25519 \

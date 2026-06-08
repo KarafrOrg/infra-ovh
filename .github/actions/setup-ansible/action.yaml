@@ -7,16 +7,21 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Install the latest version of uv
+      uses: astral-sh/setup-uv@v8.1.0
       with:
-        python-version: "${{ inputs.python-version }}"
+        python-version: '3.14'
 
-    - name: Install Ansible dependencies
+    - name: Install python dependencies
       # language=bash
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r ansible/requirements.txt
+        uv sync
+      shell: bash
+
+    - name: Install ansible dependencies
+      # language=bash
+      run: |
+        uv run ansible-galaxy collection install -r requirements.yml
       shell: bash
 
     - name: Configure SSH key
