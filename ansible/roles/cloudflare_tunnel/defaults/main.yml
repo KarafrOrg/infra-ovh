@@ -1,5 +1,5 @@
 ---
-# Required: logical name for this tunnel (used as container suffix and label)
+# Required: logical name for this tunnel (used as service suffix)
 cloudflare_tunnel_name: ""
 
 # Target state: present = running, absent = stopped and removed
@@ -14,8 +14,15 @@ cloudflare_tunnel_token: ""
 # Origin URL the tunnel forwards to (required for quick mode; informational for token mode)
 cloudflare_tunnel_origin_url: ""
 
-# Container image
-cloudflare_tunnel_image: "cloudflare/cloudflared:latest"
+# cloudflared service account
+cloudflare_tunnel_service_user: root
+cloudflare_tunnel_service_group: root
+
+# cloudflared systemd service basename
+cloudflare_tunnel_service_prefix: cloudflared
+
+# cloudflared executable path
+cloudflare_tunnel_binary_path: /usr/bin/cloudflared
 
 # Tunnel transport protocol. Use http2 for stable TCP transport.
 # Supported values: auto, quic, http2

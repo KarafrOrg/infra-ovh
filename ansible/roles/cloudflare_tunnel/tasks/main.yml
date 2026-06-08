@@ -40,32 +40,53 @@
   when:
     - cloudflare_tunnel_state == 'present'
     - cloudflare_tunnel_mode == 'quick'
-- name: Ensure docker is installed
-  ansible.builtin.package:
-    name: docker.io
-    state: present
-    update_cache: true
 
-- name: Set container name fact
+- name: Set cloudflared service facts
   ansible.builtin.set_fact:
-    _cloudflare_container_name: "cloudflared_{{ cloudflare_tunnel_name }}"
+    _cloudflare_service_name: "{{ cloudflare_tunnel_service_prefix }}-{{ cloudflare_tunnel_name }}"
+    _cloudflare_service_unit_path: "/etc/systemd/system/{{ cloudflare_tunnel_service_prefix }}-{{ cloudflare_tunnel_name }}.service"
 
-- name: Check for existing tunnel container
-  ansible.builtin.command:
-    argv: [docker, ps, -a, --filter, "name=^/{{ _cloudflare_container_name }}$", --format, "{{ '{{.ID}}' }}"]
-  register: _cloudflare_container_id
-  changed_when: false
+- name: Stop cloudflared tunnel service (state=absent)
+  ansible.builtin.systemd:
+    name: "{{ _cloudflare_service_name }}"
+    state: stopped
+    enabled: false
+    daemon_reload: true
+  failed_when: false
+  when: cloudflare_tunnel_state == 'absent'
 
-- name: Remove tunnel container (state=absent)
-  ansible.builtin.command:
-    argv: [docker, rm, -f, "{{ _cloudflare_container_name }}"]
-  when:
-    - cloudflare_tunnel_state == 'absent'
-    - _cloudflare_container_id.stdout | trim != ""
+- name: Remove cloudflared tunnel service unit (state=absent)
+  ansible.builtin.file:
+    path: "{{ _cloudflare_service_unit_path }}"
+    state: absent
+  when: cloudflare_tunnel_state == 'absent'
+
+- name: Reload systemd daemon after removing cloudflared unit
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: cloudflare_tunnel_state == 'absent'
 
 - name: End play when state=absent
   ansible.builtin.meta: end_host
   when: cloudflare_tunnel_state == 'absent'
+
+- name: Ensure cloudflared package is installed
+  ansible.builtin.apt:
+    name: cloudflared
+    state: present
+    update_cache: true
+
+- name: Ensure cloudflared binary exists
+  ansible.builtin.stat:
+    path: "{{ cloudflare_tunnel_binary_path }}"
+  register: _cloudflare_binary
+
+- name: Validate cloudflared binary path
+  ansible.builtin.assert:
+    that:
+      - _cloudflare_binary.stat.exists
+      - _cloudflare_binary.stat.executable
+    fail_msg: "cloudflared binary not found or not executable at {{ cloudflare_tunnel_binary_path }}"
 
 - name: Set cloudflared command for token-managed tunnel
   ansible.builtin.set_fact:
@@ -80,36 +101,49 @@
       tunnel --no-autoupdate --protocol {{ cloudflare_tunnel_protocol | quote }} --url {{ cloudflare_tunnel_origin_url | quote }}
   when: cloudflare_tunnel_mode == 'quick'
 
-- name: Remove existing container before reconfiguration
-  ansible.builtin.command:
-    argv: [docker, rm, -f, "{{ _cloudflare_container_name }}"]
-  when: _cloudflare_container_id.stdout | trim != ""
+- name: Render cloudflared systemd unit
+  ansible.builtin.copy:
+    dest: "{{ _cloudflare_service_unit_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Unit]
+      Description=Cloudflare Tunnel {{ cloudflare_tunnel_name }}
+      After=network-online.target
+      Wants=network-online.target
 
-- name: Start cloudflared tunnel container
-  ansible.builtin.shell: >-
-    docker run -d
-    --name {{ _cloudflare_container_name }}
-    --restart unless-stopped
-    --network host
-    --label cloudflare_tunnel_name={{ cloudflare_tunnel_name }}
-    --label cloudflare_tunnel_mode={{ cloudflare_tunnel_mode }}
-    {{ cloudflare_tunnel_image }}
-    {{ _cloudflare_run_command }}
-  args:
-    executable: /bin/bash
-  changed_when: true
+      [Service]
+      Type=simple
+      User={{ cloudflare_tunnel_service_user }}
+      Group={{ cloudflare_tunnel_service_group }}
+      ExecStart={{ cloudflare_tunnel_binary_path }} {{ _cloudflare_run_command }}
+      Restart=always
+      RestartSec=5s
+      NoNewPrivileges=true
+
+      [Install]
+      WantedBy=multi-user.target
+  notify: Restart cloudflared tunnel service
   no_log: true
 
-- name: Verify tunnel container is running
-  ansible.builtin.command:
-    argv: [docker, inspect, -f, "{{ '{{.State.Running}}' }}", "{{ _cloudflare_container_name }}"]
-  register: _cloudflare_running
-  changed_when: false
-  failed_when: _cloudflare_running.stdout | trim != "true"
+- name: Ensure cloudflared tunnel service is enabled and started
+  ansible.builtin.systemd:
+    name: "{{ _cloudflare_service_name }}"
+    enabled: true
+    state: started
+    daemon_reload: true
 
-- name: Read quick tunnel URL from container logs
+- name: Verify cloudflared tunnel service is active
+  ansible.builtin.command:
+    argv: [systemctl, is-active, "{{ _cloudflare_service_name }}"]
+  register: _cloudflare_service_active
+  changed_when: false
+  failed_when: _cloudflare_service_active.stdout | trim != "active"
+
+- name: Read quick tunnel URL from service logs
   ansible.builtin.shell: >-
-    docker logs {{ _cloudflare_container_name }} 2>&1
+    journalctl -u {{ _cloudflare_service_name }} --no-pager --output=cat
     | grep -Eo 'https://[-a-z0-9]+\.trycloudflare\.com'
     | tail -n 1
   args:
@@ -123,5 +157,5 @@
   ansible.builtin.debug:
     msg: >-
       Quick tunnel URL for '{{ cloudflare_tunnel_name }}':
-      {{ _cloudflare_quick_url.stdout | default('not found yet — check: docker logs ' ~ _cloudflare_container_name) }}
+      {{ _cloudflare_quick_url.stdout | default('not found yet — check: journalctl -u ' ~ _cloudflare_service_name ~ ' --no-pager') }}
   when: cloudflare_tunnel_mode == 'quick'
