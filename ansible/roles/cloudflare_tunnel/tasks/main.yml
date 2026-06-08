@@ -70,6 +70,21 @@
   ansible.builtin.meta: end_host
   when: cloudflare_tunnel_state == 'absent'
 
+- name: Download Cloudflare GPG key
+  ansible.builtin.get_url:
+    url: "{{ cloudflare_tunnel_apt_key_url }}"
+    dest: "{{ cloudflare_tunnel_apt_keyring_path }}"
+    mode: "0644"
+
+- name: Add Cloudflare APT repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by={{ cloudflare_tunnel_apt_keyring_path }}]
+      {{ cloudflare_tunnel_apt_repo_baseurl }}
+      {{ ansible_distribution_release }} main
+    filename: "{{ cloudflare_tunnel_apt_repo_filename }}"
+    state: present
+
 - name: Ensure cloudflared package is installed
   ansible.builtin.apt:
     name: cloudflared

@@ -24,6 +24,12 @@ cloudflare_tunnel_service_prefix: cloudflared
 # cloudflared executable path
 cloudflare_tunnel_binary_path: /usr/bin/cloudflared
 
+# Official Cloudflare apt repository settings
+cloudflare_tunnel_apt_key_url: https://pkg.cloudflare.com/cloudflare-main.gpg
+cloudflare_tunnel_apt_keyring_path: /usr/share/keyrings/cloudflare-main.gpg
+cloudflare_tunnel_apt_repo_baseurl: https://pkg.cloudflare.com/cloudflared
+cloudflare_tunnel_apt_repo_filename: cloudflare-cloudflared
+
 # Tunnel transport protocol. Use http2 for stable TCP transport.
 # Supported values: auto, quic, http2
 cloudflare_tunnel_protocol: "http2"
