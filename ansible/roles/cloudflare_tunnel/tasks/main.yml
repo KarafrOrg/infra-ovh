@@ -1,0 +1,122 @@
+---
+- name: Validate required tunnel name
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_name | length > 0
+    fail_msg: "cloudflare_tunnel_name must be set"
+
+- name: Validate tunnel state
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_state in ['present', 'absent']
+    fail_msg: "cloudflare_tunnel_state must be 'present' or 'absent'"
+
+- name: Validate tunnel mode
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_mode in ['token', 'quick']
+    fail_msg: "cloudflare_tunnel_mode must be 'token' or 'quick'"
+
+- name: Validate tunnel protocol
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_protocol in ['auto', 'quic', 'http2']
+    fail_msg: "cloudflare_tunnel_protocol must be one of: auto, quic, http2"
+
+- name: Validate token is provided for token mode
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_token | length > 0
+    fail_msg: "cloudflare_tunnel_token must be set when cloudflare_tunnel_mode=token and state=present"
+  when:
+    - cloudflare_tunnel_state == 'present'
+    - cloudflare_tunnel_mode == 'token'
+
+- name: Validate origin URL is provided for quick mode
+  ansible.builtin.assert:
+    that:
+      - cloudflare_tunnel_origin_url | length > 0
+    fail_msg: "cloudflare_tunnel_origin_url must be set when cloudflare_tunnel_mode=quick"
+  when:
+    - cloudflare_tunnel_state == 'present'
+    - cloudflare_tunnel_mode == 'quick'
+
+- name: Set container name fact
+  ansible.builtin.set_fact:
+    _cloudflare_container_name: "cloudflared_{{ cloudflare_tunnel_name }}"
+
+- name: Check for existing tunnel container
+  ansible.builtin.command:
+    argv: [docker, ps, -a, --filter, "name=^/{{ _cloudflare_container_name }}$", --format, "{{ '{{.ID}}' }}"]
+  register: _cloudflare_container_id
+  changed_when: false
+
+- name: Remove tunnel container (state=absent)
+  ansible.builtin.command:
+    argv: [docker, rm, -f, "{{ _cloudflare_container_name }}"]
+  when:
+    - cloudflare_tunnel_state == 'absent'
+    - _cloudflare_container_id.stdout | trim != ""
+
+- name: End play when state=absent
+  ansible.builtin.meta: end_host
+  when: cloudflare_tunnel_state == 'absent'
+
+- name: Set cloudflared command for token-managed tunnel
+  ansible.builtin.set_fact:
+    _cloudflare_run_command: >-
+      tunnel --no-autoupdate --protocol {{ cloudflare_tunnel_protocol | quote }} run --token {{ cloudflare_tunnel_token | quote }}
+  when: cloudflare_tunnel_mode == 'token'
+  no_log: true
+
+- name: Set cloudflared command for quick tunnel
+  ansible.builtin.set_fact:
+    _cloudflare_run_command: >-
+      tunnel --no-autoupdate --protocol {{ cloudflare_tunnel_protocol | quote }} --url {{ cloudflare_tunnel_origin_url | quote }}
+  when: cloudflare_tunnel_mode == 'quick'
+
+- name: Remove existing container before reconfiguration
+  ansible.builtin.command:
+    argv: [docker, rm, -f, "{{ _cloudflare_container_name }}"]
+  when: _cloudflare_container_id.stdout | trim != ""
+
+- name: Start cloudflared tunnel container
+  ansible.builtin.shell: >-
+    docker run -d
+    --name {{ _cloudflare_container_name }}
+    --restart unless-stopped
+    --network host
+    --label cloudflare_tunnel_name={{ cloudflare_tunnel_name }}
+    --label cloudflare_tunnel_mode={{ cloudflare_tunnel_mode }}
+    {{ cloudflare_tunnel_image }}
+    {{ _cloudflare_run_command }}
+  args:
+    executable: /bin/bash
+  changed_when: true
+  no_log: true
+
+- name: Verify tunnel container is running
+  ansible.builtin.command:
+    argv: [docker, inspect, -f, "{{ '{{.State.Running}}' }}", "{{ _cloudflare_container_name }}"]
+  register: _cloudflare_running
+  changed_when: false
+  failed_when: _cloudflare_running.stdout | trim != "true"
+
+- name: Read quick tunnel URL from container logs
+  ansible.builtin.shell: >-
+    docker logs {{ _cloudflare_container_name }} 2>&1
+    | grep -Eo 'https://[-a-z0-9]+\.trycloudflare\.com'
+    | tail -n 1
+  args:
+    executable: /bin/bash
+  register: _cloudflare_quick_url
+  changed_when: false
+  failed_when: false
+  when: cloudflare_tunnel_mode == 'quick'
+
+- name: Show quick tunnel URL
+  ansible.builtin.debug:
+    msg: >-
+      Quick tunnel URL for '{{ cloudflare_tunnel_name }}':
+      {{ _cloudflare_quick_url.stdout | default('not found yet — check: docker logs ' ~ _cloudflare_container_name) }}
+  when: cloudflare_tunnel_mode == 'quick'
