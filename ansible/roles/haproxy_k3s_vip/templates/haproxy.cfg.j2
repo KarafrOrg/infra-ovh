@@ -1,0 +1,23 @@
+global
+  log /dev/log local0
+  log /dev/log local1 notice
+  daemon
+
+defaults
+  log global
+  mode tcp
+  option tcplog
+  timeout connect 5s
+  timeout client 50s
+  timeout server 50s
+
+frontend k3s_api
+  bind {{ haproxy_k3s_api_vip }}:{{ haproxy_k3s_api_port }}
+  default_backend k3s_servers
+
+backend k3s_servers
+  balance roundrobin
+{% for node in groups[haproxy_k3s_backend_group] | sort %}
+  server {{ node }} {{ hostvars[node][haproxy_k3s_backend_address_var] | regex_replace('/\d+$', '') }}:{{ haproxy_k3s_backend_port }} check
+{% endfor %}
+

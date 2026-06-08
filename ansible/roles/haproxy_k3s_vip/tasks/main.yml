@@ -1,0 +1,53 @@
+---
+- name: Validate HAProxy VIP configuration
+  ansible.builtin.assert:
+    that:
+      - haproxy_k3s_api_vip is defined
+      - haproxy_k3s_api_vip | length > 0
+      - groups[haproxy_k3s_backend_group] is defined
+      - groups[haproxy_k3s_backend_group] | length > 0
+    fail_msg: "haproxy_k3s_vip requires haproxy_k3s_api_vip and at least one backend host"
+
+- name: Install HAProxy package
+  ansible.builtin.apt:
+    name: "{{ haproxy_k3s_packages }}"
+    state: present
+    update_cache: true
+  when: inventory_hostname in (groups[haproxy_k3s_backend_group] | default([]))
+
+- name: Allow binding to the API VIP before address ownership is established
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-haproxy-k3s-vip.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      net.ipv4.ip_nonlocal_bind=1
+  notify: Apply sysctl settings
+
+- name: Render HAProxy configuration for K3s API load-balancing
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: "{{ haproxy_k3s_config_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart HAProxy
+  when: inventory_hostname in (groups[haproxy_k3s_backend_group] | default([]))
+
+- name: Ensure HAProxy service is enabled and started
+  ansible.builtin.systemd:
+    name: haproxy
+    enabled: "{{ haproxy_k3s_service_enabled }}"
+    state: "{{ haproxy_k3s_service_state }}"
+    daemon_reload: true
+  when: inventory_hostname in (groups[haproxy_k3s_backend_group] | default([]))
+
+- name: Ensure HAProxy service is stopped on non-backend nodes
+  ansible.builtin.systemd:
+    name: haproxy
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  failed_when: false
+  when: inventory_hostname not in (groups[haproxy_k3s_backend_group] | default([]))

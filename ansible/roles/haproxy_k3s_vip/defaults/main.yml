@@ -1,0 +1,12 @@
+---
+haproxy_k3s_packages:
+  - haproxy
+haproxy_k3s_config_path: /etc/haproxy/haproxy.cfg
+haproxy_k3s_api_vip: "{{ api_endpoint }}"
+haproxy_k3s_api_port: 6443
+haproxy_k3s_backend_group: server
+haproxy_k3s_backend_address_var: wireguard_address
+haproxy_k3s_backend_port: 6443
+haproxy_k3s_service_enabled: true
+haproxy_k3s_service_state: started
+
