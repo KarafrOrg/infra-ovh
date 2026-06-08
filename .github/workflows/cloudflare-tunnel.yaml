@@ -58,6 +58,8 @@ jobs:
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
 
+      - uses: ./.github/actions/setup-ansible
+
       - name: Resolve Cloudflare token secret name
         id: resolve_secret
         # language=bash
@@ -76,16 +78,6 @@ jobs:
           secret-name: ${{ steps.resolve_secret.outputs.secret_name }}
           env-name: CLOUDFLARE_TUNNEL_TOKEN
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Ansible dependencies
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -r ansible/requirements.txt
-
       - name: Configure SSH key
         uses: ./.github/actions/setup-ssh-key
         with:
@@ -95,12 +87,6 @@ jobs:
         # language=bash
         run: |
           set -euo pipefail
-
-          inventory_path="ansible/.kolla/multinode"
-          if [[ ! -f "$inventory_path" ]]; then
-            echo "Kolla inventory not found, falling back to tfvars dynamic inventory." >&2
-            inventory_path="ansible/scripts/inventory_from_tfvars.py"
-          fi
 
           extra_args=(
             -e "cloudflare_tunnel_name=${{ inputs.tunnel_name }}"
@@ -117,7 +103,6 @@ jobs:
           fi
 
           uv run ansible-playbook \
-            -i "$inventory_path" \
             ansible/playbooks/manage-cloudflare-tunnel.yml \
             --private-key ~/.ssh/id_ed25519 \
             "${extra_args[@]}"
