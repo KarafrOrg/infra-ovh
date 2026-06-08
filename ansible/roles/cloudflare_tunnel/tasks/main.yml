@@ -40,6 +40,11 @@
   when:
     - cloudflare_tunnel_state == 'present'
     - cloudflare_tunnel_mode == 'quick'
+- name: Ensure docker is installed
+  ansible.builtin.package:
+    name: docker.io
+    state: present
+    update_cache: true
 
 - name: Set container name fact
   ansible.builtin.set_fact:
