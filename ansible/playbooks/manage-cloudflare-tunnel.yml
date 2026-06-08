@@ -20,6 +20,6 @@
   tasks:
     - name: Apply cloudflare-tunnel role on target hosts
       ansible.builtin.include_role:
-        name: cloudflare-tunnel
+        name: cloudflare_tunnel
       when:
         - inventory_hostname in groups.get((cloudflare_tunnel_host_group | default('openstack_kolla_hosts')), groups['all'])
