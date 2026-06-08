@@ -1,0 +1,14 @@
+[project]
+name = "infra-ovh"
+version = "0.1.0"
+readme = "docs/README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "ansible>=14.0.0",
+    "python-hcl2>=8.1.2",
+]
+
+[project.scripts]
+ansible = "ansible.cli.adhoc:main"
+ansible-playbook = "ansible.cli.playbook:main"
+ansible-galaxy = "ansible.cli.galaxy:main"

@@ -57,3 +57,4 @@ secrets/
 cred.json
 secrets.auto.tfvars
 ansible/.venv
+ansible/galaxy_roles

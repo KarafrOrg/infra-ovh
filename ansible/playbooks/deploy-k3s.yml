@@ -1,0 +1,61 @@
+---
+- name: Bootstrap OVH dedicated servers and configure WireGuard mesh
+  hosts: ovh_dedicated_servers
+  become: true
+  gather_facts: false
+  vars: &k3s_deploy_vars
+    k3s_version: v1.36.1+k3s1
+    k3s_api_vip: 10.200.0.10
+    api_endpoint: "{{ k3s_api_vip }}"
+    wireguard_virtual_ip_owner: "{{ (groups['server'] | default([]) | sort | first) | default('') }}"
+    wireguard_virtual_ips:
+      - "{{ k3s_api_vip }}/32"
+
+  pre_tasks:
+    - name: Ensure Python 3 is available on target hosts
+      ansible.builtin.raw: test -x /usr/bin/python3 || (apt-get update && apt-get install -y python3)
+      changed_when: false
+
+    - name: Gather facts
+      ansible.builtin.setup:
+
+  roles:
+    - role: wireguard_mesh
+
+- name: Deploy HAProxy VIP endpoint for K3s API on control hosts
+  hosts: server
+  become: true
+  gather_facts: false
+  vars: *k3s_deploy_vars
+
+  roles:
+    - role: haproxy_k3s_vip
+
+- name: Prepare K3s cluster nodes
+  hosts: k3s_cluster
+  become: true
+  gather_facts: true
+  vars: *k3s_deploy_vars
+
+  roles:
+    - role: k3s.orchestration.prereq
+    - role: k3s.orchestration.airgap
+    - role: k3s.orchestration.raspberrypi
+
+- name: Configure K3s servers
+  hosts: server
+  become: true
+  gather_facts: false
+  vars: *k3s_deploy_vars
+
+  roles:
+    - role: k3s.orchestration.k3s_server
+
+- name: Configure K3s agents
+  hosts: agent
+  become: true
+  gather_facts: false
+  vars: *k3s_deploy_vars
+
+  roles:
+    - role: k3s.orchestration.k3s_agent

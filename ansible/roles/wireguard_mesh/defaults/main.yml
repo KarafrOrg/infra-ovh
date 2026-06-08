@@ -1,0 +1,19 @@
+---
+wireguard_interface: wg0
+wireguard_config_dir: /etc/wireguard
+wireguard_packages:
+  - wireguard
+  - wireguard-tools
+wireguard_listen_port: 51820
+wireguard_internal_network: 10.44.0.0/24
+wireguard_external_network: 10.45.0.0/24
+wireguard_network: "{{ wireguard_internal_network }}"
+wireguard_persistent_keepalive: 25
+wireguard_enable_ip_forwarding: true
+wireguard_manage_ufw: false
+wireguard_manage_hosts_file: true
+wireguard_hosts_file_path: /etc/hosts
+wireguard_virtual_ip_owner: ""
+wireguard_virtual_ips: []
+wireguard_service_enabled: true
+wireguard_service_state: started

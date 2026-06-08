@@ -21,8 +21,11 @@ run = """
 echo "Initializing Terraform in live/${ENVIRONMENT}"
 echo "Using terraform version $(terraform version)"
 
+uv run ansible-galaxy install -r requirements.yml
+
 cd "live/${ENVIRONMENT}"
 terraform init
+
 """
 
 [tasks.plan]
