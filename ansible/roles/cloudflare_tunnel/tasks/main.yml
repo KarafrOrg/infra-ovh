@@ -70,6 +70,15 @@
   ansible.builtin.meta: end_host
   when: cloudflare_tunnel_state == 'absent'
 
+- name: Gather distribution facts for Cloudflare apt repository
+  ansible.builtin.setup:
+    gather_subset:
+      - min
+    filter:
+      - ansible_distribution
+      - ansible_distribution_release
+  when: ansible_distribution_release is not defined
+
 - name: Download Cloudflare GPG key
   ansible.builtin.get_url:
     url: "{{ cloudflare_tunnel_apt_key_url }}"
