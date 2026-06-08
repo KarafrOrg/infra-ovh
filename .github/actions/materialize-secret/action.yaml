@@ -1,0 +1,85 @@
+name: Materialize secret
+description: Fetch a secret from GCP Secret Manager and write it to a file and/or environment variable
+
+inputs:
+  secret-name:
+    description: Secret Manager secret name
+    required: true
+  destination-path:
+    description: Optional file path where the secret value should be written
+    required: false
+  env-name:
+    description: Optional environment variable name to export via GITHUB_ENV
+    required: false
+  project-id:
+    description: Optional GCP project id override
+    required: false
+  file-mode:
+    description: File mode for destination-path
+    required: false
+    default: "0600"
+  append-newline:
+    description: Append a trailing newline when writing destination-path
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Materialize secret value
+      shell: bash
+      # language=bash
+      run: |
+        set -euo pipefail
+
+        secret_name="${{ inputs.secret-name }}"
+        destination_path="${{ inputs.destination-path }}"
+        env_name="${{ inputs.env-name }}"
+        project_id="${{ inputs.project-id }}"
+        file_mode="${{ inputs.file-mode }}"
+        append_newline="${{ inputs.append-newline }}"
+
+        if [[ -z "$destination_path" && -z "$env_name" ]]; then
+          echo "Either destination-path or env-name must be provided." >&2
+          exit 1
+        fi
+
+        if ! command -v gcloud >/dev/null 2>&1; then
+          echo "gcloud CLI is required for materialize-secret action." >&2
+          exit 1
+        fi
+
+        project_flag=()
+        if [[ -n "$project_id" ]]; then
+          project_flag=(--project "$project_id")
+        fi
+
+        secret_value="$(gcloud secrets versions access latest --secret="$secret_name" "${project_flag[@]}")"
+
+        # Mask multiline secrets safely for GitHub workflow commands.
+        escaped_secret_value="${secret_value//'%'/'%25'}"
+        escaped_secret_value="${escaped_secret_value//$'\r'/'%0D'}"
+        escaped_secret_value="${escaped_secret_value//$'\n'/'%0A'}"
+        echo "::add-mask::${escaped_secret_value}"
+        while IFS= read -r secret_line; do
+          [[ -z "$secret_line" ]] && continue
+          echo "::add-mask::${secret_line}"
+        done <<< "$secret_value"
+        
+        if [[ -n "$destination_path" ]]; then
+          mkdir -p "$(dirname "$destination_path")"
+          if [[ "$append_newline" == "true" ]]; then
+            printf '%s\n' "$secret_value" > "$destination_path"
+          else
+            printf '%s' "$secret_value" > "$destination_path"
+          fi
+          chmod "$file_mode" "$destination_path"
+        fi
+
+        if [[ -n "$env_name" ]]; then
+          {
+            echo "${env_name}<<EOF"
+            printf '%s\n' "$secret_value"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+        fi
