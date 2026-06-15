@@ -35,7 +35,8 @@ permissions:
   id-token: write
 
 jobs:
-  horizon-tunnel:
+  k8s-api-tunnel:
+    name: Manage k8s API tunnel
     uses: ./.github/workflows/cloudflare-tunnel.yaml
     with:
       environment: ${{ inputs.environment }}
@@ -43,4 +44,4 @@ jobs:
       origin_url: ${{ inputs.origin_url }}
       mode: ${{ inputs.mode }}
       state: ${{ inputs.state }}
-      token_gcp_secret: cloudflare-tunnel-token-k3s-api
+      token_gcp_secret: cloudflare-tunnel-token-kubernetes-api
