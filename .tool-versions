@@ -1,3 +1,4 @@
 gcloud 564.0.0
 terraform 1.14
 jq 1.7.1
+uv 0.11
