@@ -196,3 +196,122 @@ resource "google_secret_manager_secret_version" "k8s_api_endpoint" {
   is_secret_data_base64 = false
   deletion_policy       = "ABANDON"
 }
+
+resource "google_secret_manager_secret" "k8s_api_token" {
+  count     = var.k8s_api_token_secret_id != null ? 1 : 0
+  secret_id = var.k8s_api_token_secret_id
+
+  labels = {
+    managed_by   = "terraform"
+    cluster_name = var.cluster_name
+  }
+
+  replication {
+    dynamic "auto" {
+      for_each = var.secret_replication_automatic ? [1] : []
+      content {}
+    }
+
+    dynamic "user_managed" {
+      for_each = var.secret_replication_automatic ? [] : [1]
+      content {
+        dynamic "replicas" {
+          for_each = var.secret_replication_locations
+          content {
+            location = replicas.value
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "k8s_api_token" {
+  count                 = var.k8s_api_endpoint_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_endpoint[0].id
+  secret_data           = talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_key
+  is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
+}
+
+resource "google_secret_manager_secret" "k8s_api_certificate_authority" {
+  count     = var.k8s_api_certificate_authority_secret_id != null ? 1 : 0
+  secret_id = var.k8s_api_certificate_authority_secret_id
+
+  labels = {
+    managed_by   = "terraform"
+    cluster_name = var.cluster_name
+  }
+
+  replication {
+    dynamic "auto" {
+      for_each = var.secret_replication_automatic ? [1] : []
+      content {}
+    }
+
+    dynamic "user_managed" {
+      for_each = var.secret_replication_automatic ? [] : [1]
+      content {
+        dynamic "replicas" {
+          for_each = var.secret_replication_locations
+          content {
+            location = replicas.value
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "k8s_api_certificate_authority" {
+  count                 = var.k8s_api_certificate_authority_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_certificate_authority[0].id
+  secret_data           = talos_cluster_kubeconfig.this.kubernetes_client_configuration.ca_certificate
+  is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
+}
+
+resource "google_secret_manager_secret_version" "k8s_api_token" {
+  count                 = var.k8s_api_endpoint_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_endpoint[0].id
+  secret_data           = talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_key
+  is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
+}
+
+resource "google_secret_manager_secret" "k8s_api_client_certificate" {
+  count     = var.k8s_api_client_certificate_secret_id != null ? 1 : 0
+  secret_id = var.k8s_api_client_certificate_secret_id
+
+  labels = {
+    managed_by   = "terraform"
+    cluster_name = var.cluster_name
+  }
+
+  replication {
+    dynamic "auto" {
+      for_each = var.secret_replication_automatic ? [1] : []
+      content {}
+    }
+
+    dynamic "user_managed" {
+      for_each = var.secret_replication_automatic ? [] : [1]
+      content {
+        dynamic "replicas" {
+          for_each = var.secret_replication_locations
+          content {
+            location = replicas.value
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "k8s_api_client_certificate" {
+  count                 = var.k8s_api_client_certificate_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_client_certificate[0].id
+  secret_data           = talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_certificate
+  is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
+}

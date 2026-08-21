@@ -26,15 +26,17 @@ module "ovh_dedicated_server" {
 module "talos_cluster" {
   source = "../ovh-talos-cluster"
 
-  control_plane_ips            = local.control_plane_ips
-  worker_ips                   = local.worker_ips
-  cluster_name                 = var.cluster_name
-  cluster_endpoint             = var.cluster_endpoint
-  kubeconfig_secret_id         = var.kubeconfig_secret_id
-  secret_replication_automatic = var.secret_replication_automatic
-  secret_replication_locations = var.secret_replication_locations
-  talosconfig_secret_id        = var.talosconfig_secret_id
-  k8s_api_endpoint_secret_id   = var.k8s_api_endpoint_secret_id
-  installation_task_ids        = module.ovh_dedicated_server.installation_tasks
+  control_plane_ips                       = local.control_plane_ips
+  worker_ips                              = local.worker_ips
+  cluster_name                            = var.cluster_name
+  cluster_endpoint                        = var.cluster_endpoint
+  kubeconfig_secret_id                    = var.kubeconfig_secret_id
+  secret_replication_automatic            = var.secret_replication_automatic
+  secret_replication_locations            = var.secret_replication_locations
+  talosconfig_secret_id                   = var.talosconfig_secret_id
+  k8s_api_endpoint_secret_id              = var.k8s_api_endpoint_secret_id
+  k8s_api_certificate_authority_secret_id = var.k8s_api_certificate_authority_secret_id
+  k8s_api_client_certificate_secret_id    = var.k8s_api_client_certificate_secret_id
+  installation_task_ids                   = module.ovh_dedicated_server.installation_tasks
 }
 

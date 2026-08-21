@@ -26,6 +26,24 @@ variable "k8s_api_endpoint_secret_id" {
   default     = null
 }
 
+variable "k8s_api_certificate_authority_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API certificate authority"
+  type        = string
+  default     = null
+}
+
+variable "k8s_api_client_certificate_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API client certificate"
+  type        = string
+  default     = null
+}
+
+variable "k8s_api_token_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API token"
+  type        = string
+  default     = null
+}
+
 variable "kubeconfig_secret_id" {
   description = "GCP Secret Manager secret ID for storing the cluster kubeconfig"
   type        = string

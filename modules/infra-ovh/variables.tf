@@ -16,6 +16,24 @@ variable "k8s_api_endpoint_secret_id" {
   default     = "k8s-api-endpoint"
 }
 
+variable "k8s_api_certificate_authority_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API certificate authority"
+  type        = string
+  default     = "k8s-api-certificate-authority"
+}
+
+variable "k8s_api_client_certificate_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API client certificate"
+  type        = string
+  default     = "k8s-api-client-certificate"
+}
+
+variable "k8s_api_token_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API token"
+  type        = string
+  default     = "k8s-api-token"
+}
+
 variable "cluster_name" {
   description = "Name of the Talos cluster"
   type        = string
@@ -26,20 +44,6 @@ variable "cluster_endpoint" {
   description = "Kubernetes API server endpoint. Defaults to the first control plane IP from server labels."
   type        = string
   default     = null
-}
-
-variable "ovh_credentials_secret_names" {
-  description = "Names of GCP secrets containing OVH API credentials"
-  type = object({
-    application_key    = string
-    application_secret = string
-    consumer_key       = string
-  })
-  default = {
-    application_key    = "ovh-application-key"
-    application_secret = "ovh-application-secret"
-    consumer_key       = "ovh-consumer-key"
-  }
 }
 
 # Server Configuration Variables
