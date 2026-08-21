@@ -11,7 +11,7 @@ resource "talos_machine_secrets" "this" {}
 data "talos_machine_configuration" "control_plane" {
   cluster_name     = var.cluster_name
   machine_type     = "controlplane"
-  cluster_endpoint = "https://${var.cluster_endpoint}:6443"
+  cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
   config_patches = [
     yamlencode({
@@ -29,7 +29,7 @@ data "talos_machine_configuration" "control_plane" {
 data "talos_machine_configuration" "worker" {
   cluster_name     = var.cluster_name
   machine_type     = "worker"
-  cluster_endpoint = "https://${var.cluster_endpoint}:6443"
+  cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
 }
 
