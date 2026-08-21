@@ -73,7 +73,10 @@ resource "talos_machine_bootstrap" "this" {
   client_configuration = sensitive(talos_machine_secrets.this.client_configuration)
   node                 = var.control_plane_ips[0]
 
-  depends_on = [talos_machine_configuration_apply.control_plane]
+  depends_on = [
+    data.network_port_wait.talos_api,
+    talos_machine_configuration_apply.control_plane,
+  ]
 }
 
 resource "talos_cluster_kubeconfig" "this" {
