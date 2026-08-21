@@ -14,14 +14,3 @@ module "infra_ovh" {
   cluster_endpoint             = var.cluster_endpoint
   kubeconfig_secret_id         = var.kubeconfig_secret_id
 }
-
-module "cluster_config" {
-  source = "../../modules/kubernetes-config"
-
-  cluster_name                 = var.cluster_name
-  cluster_server               = module.infra_ovh.talos_cluster_server
-  cluster_ca_cert              = module.infra_ovh.talos_cluster_ca_cert
-  automation_admin_secret_id   = var.automation_admin_secret_id
-  secret_replication_automatic = var.secret_replication_automatic
-  secret_replication_locations = var.secret_replication_locations
-}
