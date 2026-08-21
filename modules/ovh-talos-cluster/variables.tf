@@ -40,8 +40,5 @@ variable "secret_replication_locations" {
 
 variable "installation_task_ids" {
   description = "List of installation task IDs"
-  type = list(object({
-    task_id = string
-    ip      = string
-  }))
+  type = any
 }
