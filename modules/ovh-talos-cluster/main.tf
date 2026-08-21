@@ -20,8 +20,8 @@ data "talos_machine_configuration" "control_plane" {
         apiServer = {
           extraArgs = {
             "anonymous-auth"           = "true"
-            "service-account-issuer"   = "https://api.k8s.karafra.net:6443"
-            "service-account-jwks-uri" = "https://api.k8s.karafra.net:6443/openid/v1/jwks"
+            "service-account-issuer"   = "https://oidc.k8s.karafra.net"
+            "service-account-jwks-uri" = "https://oidc.k8s.karafra.net/openid/v1/jwks"
           }
         }
       }
