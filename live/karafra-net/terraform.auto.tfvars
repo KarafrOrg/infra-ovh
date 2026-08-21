@@ -70,3 +70,6 @@ notification_topic_prefix = "ovh-server-monitoring"
 
 # Cloudflare Tunnel configuration
 cloudflare_tunnel_token_secret_id = "cloudflare-tunnel-token-kubernetes-oidc"
+
+# OIDC configuration
+oidc_issuer_host                  = "oidc.k8s.karafra.net"
