@@ -67,3 +67,5 @@ secret_replication_locations = ["europe-west1", "europe-west3"]
 
 # Notification configuration
 notification_topic_prefix = "ovh-server-monitoring"
+
+cluster_endpoint = "api.k8s.karafra.net"
