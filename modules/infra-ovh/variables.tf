@@ -13,7 +13,7 @@ variable "talosconfig_secret_id" {
 variable "k8s_api_endpoint_secret_id" {
   description = "GCP Secret Manager secret ID for storing the Kubernetes API endpoint"
   type        = string
-  default     = "k8s-production-host"
+  default     = "k8s-api-endpoint"
 }
 
 variable "cluster_name" {
