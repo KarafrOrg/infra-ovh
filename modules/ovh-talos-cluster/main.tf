@@ -152,7 +152,7 @@ resource "google_secret_manager_secret" "talosconfig" {
 resource "google_secret_manager_secret_version" "talosconfig" {
   count                 = var.talosconfig_secret_id != null ? 1 : 0
   secret                = google_secret_manager_secret.talosconfig[0].id
-  secret_data           = talos_machine_secrets.this.client_configuration
+  secret_data           = yamlencode(talos_machine_secrets.this.client_configuration)
   is_secret_data_base64 = false
   deletion_policy       = "ABANDON"
 }
