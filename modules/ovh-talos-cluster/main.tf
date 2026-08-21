@@ -13,6 +13,7 @@ data "talos_machine_configuration" "control_plane" {
   machine_type     = "controlplane"
   cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
+
   config_patches = [
     yamlencode({
       cluster = {
@@ -45,11 +46,13 @@ resource "talos_machine_configuration_apply" "control_plane" {
   machine_configuration_input = data.talos_machine_configuration.control_plane.machine_configuration
   node                        = each.value
 
-  depends_on = [data.network_port_wait.talos_api]
+  depends_on = [
+    data.network_port_wait.talos_api,
+  ]
 
   lifecycle {
     replace_triggered_by = [
-      terraform_data.installation_task
+      terraform_data.installation_task,
     ]
   }
 }
@@ -60,11 +63,13 @@ resource "talos_machine_configuration_apply" "worker" {
   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
   node                        = each.value
 
-  depends_on = [data.network_port_wait.talos_api]
+  depends_on = [
+    data.network_port_wait.talos_api,
+  ]
 
   lifecycle {
     replace_triggered_by = [
-      terraform_data.installation_task
+      terraform_data.installation_task,
     ]
   }
 }
@@ -83,7 +88,9 @@ resource "talos_cluster_kubeconfig" "this" {
   client_configuration = sensitive(talos_machine_secrets.this.client_configuration)
   node                 = var.control_plane_ips[0]
 
-  depends_on = [talos_machine_bootstrap.this]
+  depends_on = [
+    talos_machine_bootstrap.this,
+  ]
 }
 
 resource "google_secret_manager_secret" "kubeconfig" {
@@ -98,14 +105,17 @@ resource "google_secret_manager_secret" "kubeconfig" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
@@ -135,14 +145,17 @@ resource "google_secret_manager_secret" "talosconfig" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
@@ -172,14 +185,17 @@ resource "google_secret_manager_secret" "k8s_api_endpoint" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
@@ -209,14 +225,17 @@ resource "google_secret_manager_secret" "k8s_api_token" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
@@ -226,9 +245,9 @@ resource "google_secret_manager_secret" "k8s_api_token" {
   }
 }
 
-resource "google_secret_manager_secret_version" "k8s_api_endpoint" {
-  count                 = var.k8s_api_endpoint_secret_id != null ? 1 : 0
-  secret                = google_secret_manager_secret.k8s_api_endpoint[0].id
+resource "google_secret_manager_secret_version" "k8s_api_token" {
+  count                 = var.k8s_api_token_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_token[0].id
   secret_data           = talos_cluster_kubeconfig.this.kubernetes_client_configuration.client_key
   is_secret_data_base64 = false
   deletion_policy       = "ABANDON"
@@ -246,14 +265,17 @@ resource "google_secret_manager_secret" "k8s_api_certificate_authority" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
@@ -271,6 +293,10 @@ resource "google_secret_manager_secret_version" "k8s_api_certificate_authority" 
   deletion_policy       = "ABANDON"
 }
 
+# -----------------------------------------------------------------------------
+# Kubernetes API client certificate
+# -----------------------------------------------------------------------------
+
 resource "google_secret_manager_secret" "k8s_api_client_certificate" {
   count     = var.k8s_api_client_certificate_secret_id != null ? 1 : 0
   secret_id = var.k8s_api_client_certificate_secret_id
@@ -283,14 +309,17 @@ resource "google_secret_manager_secret" "k8s_api_client_certificate" {
   replication {
     dynamic "auto" {
       for_each = var.secret_replication_automatic ? [1] : []
+
       content {}
     }
 
     dynamic "user_managed" {
       for_each = var.secret_replication_automatic ? [] : [1]
+
       content {
         dynamic "replicas" {
           for_each = var.secret_replication_locations
+
           content {
             location = replicas.value
           }
