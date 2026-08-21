@@ -35,7 +35,7 @@ data "talos_machine_configuration" "worker" {
 
 resource "talos_machine_configuration_apply" "control_plane" {
   for_each                    = toset(var.control_plane_ips)
-  client_configuration        = talos_machine_secrets.this.client_configuration
+  client_configuration        = sensitive(talos_machine_secrets.this.client_configuration)
   machine_configuration_input = data.talos_machine_configuration.control_plane.machine_configuration
   node                        = each.value
 
@@ -44,7 +44,7 @@ resource "talos_machine_configuration_apply" "control_plane" {
 
 resource "talos_machine_configuration_apply" "worker" {
   for_each                    = toset(var.worker_ips)
-  client_configuration        = talos_machine_secrets.this.client_configuration
+  client_configuration        = sensitive(talos_machine_secrets.this.client_configuration)
   machine_configuration_input = data.talos_machine_configuration.worker.machine_configuration
   node                        = each.value
 
@@ -52,14 +52,14 @@ resource "talos_machine_configuration_apply" "worker" {
 }
 
 resource "talos_machine_bootstrap" "this" {
-  client_configuration = talos_machine_secrets.this.client_configuration
+  client_configuration = sensitive(talos_machine_secrets.this.client_configuration)
   node                 = var.control_plane_ips[0]
 
   depends_on = [talos_machine_configuration_apply.control_plane]
 }
 
 resource "talos_cluster_kubeconfig" "this" {
-  client_configuration = talos_machine_secrets.this.client_configuration
+  client_configuration = sensitive(talos_machine_secrets.this.client_configuration)
   node                 = var.control_plane_ips[0]
 
   depends_on = [talos_machine_bootstrap.this]
