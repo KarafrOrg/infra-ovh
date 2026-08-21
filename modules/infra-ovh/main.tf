@@ -33,5 +33,12 @@ module "talos_cluster" {
   kubeconfig_secret_id         = var.kubeconfig_secret_id
   secret_replication_automatic = var.secret_replication_automatic
   secret_replication_locations = var.secret_replication_locations
+  installation_task_ids = [
+    for k, v in module.ovh_dedicated_server.installation_task_ids :
+    {
+      task_id = k
+      ip      = v
+    }
+  ]
 }
 

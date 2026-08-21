@@ -40,6 +40,12 @@ resource "talos_machine_configuration_apply" "control_plane" {
   node                        = each.value
 
   depends_on = [data.network_port_wait.talos_api]
+
+  lifecycle {
+    replace_triggered_by = [
+      var.installation_task_ids[each.key].task_id
+    ]
+  }
 }
 
 resource "talos_machine_configuration_apply" "worker" {
@@ -49,6 +55,12 @@ resource "talos_machine_configuration_apply" "worker" {
   node                        = each.value
 
   depends_on = [data.network_port_wait.talos_api]
+
+  lifecycle {
+    replace_triggered_by = [
+      var.installation_task_ids[each.key].task_id
+    ]
+  }
 }
 
 resource "talos_machine_bootstrap" "this" {

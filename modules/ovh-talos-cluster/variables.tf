@@ -37,3 +37,11 @@ variable "secret_replication_locations" {
   type        = list(string)
   default     = ["europe-west1", "europe-west3"]
 }
+
+variable "installation_task_ids" {
+  description = "List of installation task IDs"
+  type = list(object({
+    task_id = string
+    ip      = string
+  }))
+}
