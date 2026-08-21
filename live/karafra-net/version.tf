@@ -16,6 +16,10 @@ terraform {
       source  = "xdevs23/network"
       version = "0.0.1-beta.2"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
   backend "remote" {
     hostname     = "app.terraform.io"
@@ -36,4 +40,8 @@ provider "ovh" {
   application_key    = var.ovh_application_key
   application_secret = var.ovh_application_secret
   consumer_key       = var.ovh_consumer_key
+}
+
+provider "kubernetes" {
+  config_raw = module.infra_ovh.talos_kubeconfig
 }

@@ -1,3 +1,15 @@
+variable "kubeconfig_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the cluster kubeconfig"
+  type        = string
+  default     = "talos-kubeconfig"
+}
+
+variable "automation_admin_secret_id" {
+  description = "GCP Secret Manager secret ID for the automation-admin kubeconfig"
+  type        = string
+  default     = "talos-automation-admin-kubeconfig"
+}
+
 variable "cluster_name" {
   description = "Name of the Talos cluster"
   type        = string

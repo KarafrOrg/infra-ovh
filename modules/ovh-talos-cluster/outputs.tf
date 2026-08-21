@@ -12,6 +12,17 @@ output "machine_secrets" {
 
 output "kubeconfig_raw" {
   description = "Raw kubeconfig for the bootstrapped cluster"
-  value       = data.talos_cluster_kubeconfig.this.kubeconfig_raw
+  value       = talos_cluster_kubeconfig.this.kubeconfig_raw
   sensitive   = true
+}
+
+output "cluster_ca_cert" {
+  description = "Base64-encoded cluster CA certificate (from kubeconfig)"
+  value       = local.cluster_ca_cert
+  sensitive   = true
+}
+
+output "cluster_server" {
+  description = "Kubernetes API server URL"
+  value       = local.cluster_server
 }

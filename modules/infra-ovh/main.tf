@@ -26,9 +26,12 @@ module "ovh_dedicated_server" {
 module "talos_cluster" {
   source = "../ovh-talos-cluster"
 
-  control_plane_ips = local.control_plane_ips
-  worker_ips        = local.worker_ips
-  cluster_name      = var.cluster_name
-  cluster_endpoint  = var.cluster_endpoint
+  control_plane_ips            = local.control_plane_ips
+  worker_ips                   = local.worker_ips
+  cluster_name                 = var.cluster_name
+  cluster_endpoint             = var.cluster_endpoint
+  kubeconfig_secret_id         = var.kubeconfig_secret_id
+  secret_replication_automatic = var.secret_replication_automatic
+  secret_replication_locations = var.secret_replication_locations
 }
 

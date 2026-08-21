@@ -17,3 +17,14 @@ output "talos_client_configuration" {
   value       = module.talos_cluster.client_configuration
   sensitive   = true
 }
+
+output "talos_cluster_server" {
+  description = "Kubernetes API server URL"
+  value       = module.talos_cluster.cluster_server
+}
+
+output "talos_cluster_ca_cert" {
+  description = "Base64-encoded cluster CA certificate"
+  value       = module.talos_cluster.cluster_ca_cert
+  sensitive   = true
+}

@@ -6,5 +6,8 @@ terraform {
     network = {
       source  = "xdevs23/network"
     }
+    google = {
+      source  = "hashicorp/google"
+    }
   }
 }

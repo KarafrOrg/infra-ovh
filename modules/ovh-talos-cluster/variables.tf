@@ -19,3 +19,21 @@ variable "cluster_endpoint" {
   type        = string
   default     = null
 }
+
+variable "kubeconfig_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the cluster kubeconfig"
+  type        = string
+  default     = null
+}
+
+variable "secret_replication_automatic" {
+  description = "Whether to use automatic replication for the kubeconfig secret"
+  type        = bool
+  default     = true
+}
+
+variable "secret_replication_locations" {
+  description = "GCP regions for kubeconfig secret replication when not using automatic"
+  type        = list(string)
+  default     = ["europe-west1", "europe-west3"]
+}
