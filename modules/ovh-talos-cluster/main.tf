@@ -43,7 +43,7 @@ resource "talos_machine_configuration_apply" "control_plane" {
 
   lifecycle {
     replace_triggered_by = [
-      var.installation_task_ids[each.key].task_id
+      var.installation_task_ids[each.key]
     ]
   }
 }
@@ -58,7 +58,7 @@ resource "talos_machine_configuration_apply" "worker" {
 
   lifecycle {
     replace_triggered_by = [
-      var.installation_task_ids[each.key].task_id
+      var.installation_task_ids[each.key]
     ]
   }
 }

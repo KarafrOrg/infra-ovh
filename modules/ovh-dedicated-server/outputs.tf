@@ -36,9 +36,9 @@ output "notification_topics" {
   }
 }
 
-output "installation_task_ids" {
+output "installation_tasks" {
   value = {
     for k, v in ovh_dedicated_server_reinstall_task.initial_server_reinstall :
-    ovh_dedicated_server.server[k.service_name].ip => v.id
+    k => v
   }
 }
