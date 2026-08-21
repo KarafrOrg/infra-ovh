@@ -20,6 +20,12 @@ variable "cluster_endpoint" {
   default     = null
 }
 
+variable "k8s_api_endpoint_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Kubernetes API endpoint"
+  type        = string
+  default     = null
+}
+
 variable "kubeconfig_secret_id" {
   description = "GCP Secret Manager secret ID for storing the cluster kubeconfig"
   type        = string

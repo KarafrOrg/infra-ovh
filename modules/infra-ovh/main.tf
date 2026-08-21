@@ -34,6 +34,7 @@ module "talos_cluster" {
   secret_replication_automatic = var.secret_replication_automatic
   secret_replication_locations = var.secret_replication_locations
   talosconfig_secret_id        = var.talosconfig_secret_id
+  k8s_api_endpoint_secret_id   = var.k8s_api_endpoint_secret_id
   installation_task_ids        = module.ovh_dedicated_server.installation_tasks
 }
 

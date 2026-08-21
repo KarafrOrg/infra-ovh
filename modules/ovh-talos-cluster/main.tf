@@ -159,3 +159,40 @@ resource "google_secret_manager_secret_version" "talosconfig" {
   is_secret_data_base64 = false
   deletion_policy       = "ABANDON"
 }
+
+resource "google_secret_manager_secret" "k8s_api_endpoint" {
+  count     = var.k8s_api_endpoint_secret_id != null ? 1 : 0
+  secret_id = var.k8s_api_endpoint_secret_id
+
+  labels = {
+    managed_by   = "terraform"
+    cluster_name = var.cluster_name
+  }
+
+  replication {
+    dynamic "auto" {
+      for_each = var.secret_replication_automatic ? [1] : []
+      content {}
+    }
+
+    dynamic "user_managed" {
+      for_each = var.secret_replication_automatic ? [] : [1]
+      content {
+        dynamic "replicas" {
+          for_each = var.secret_replication_locations
+          content {
+            location = replicas.value
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "google_secret_manager_secret_version" "k8s_api_endpoint" {
+  count                 = var.k8s_api_endpoint_secret_id != null ? 1 : 0
+  secret                = google_secret_manager_secret.k8s_api_endpoint[0].id
+  secret_data           = local.cluster_endpoint
+  is_secret_data_base64 = false
+  deletion_policy       = "ABANDON"
+}
