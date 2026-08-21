@@ -33,6 +33,12 @@ data "talos_machine_configuration" "worker" {
   machine_secrets  = talos_machine_secrets.this.machine_secrets
 }
 
+resource "terraform_data" "installation_task" {
+  for_each = var.installation_task_ids
+
+  input = each.value
+}
+
 resource "talos_machine_configuration_apply" "control_plane" {
   for_each                    = toset(var.control_plane_ips)
   client_configuration        = sensitive(talos_machine_secrets.this.client_configuration)
@@ -43,7 +49,7 @@ resource "talos_machine_configuration_apply" "control_plane" {
 
   lifecycle {
     replace_triggered_by = [
-      var.installation_task_ids[each.key]
+      terraform_data.installation_task
     ]
   }
 }
@@ -58,7 +64,7 @@ resource "talos_machine_configuration_apply" "worker" {
 
   lifecycle {
     replace_triggered_by = [
-      var.installation_task_ids[each.key]
+      terraform_data.installation_task
     ]
   }
 }
