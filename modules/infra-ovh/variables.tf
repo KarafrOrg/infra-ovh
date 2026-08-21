@@ -138,3 +138,13 @@ variable "ovh_consumer_key" {
   sensitive   = true
   ephemeral   = true
 }
+
+variable "cloudflare_tunnel_token_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Cloudflare tunnel token"
+  type        = string
+}
+
+variable "oidc_issuer_host" {
+  description = "OIDC issuer host for the Kubernetes API server"
+  type        = string
+}

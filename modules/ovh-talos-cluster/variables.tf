@@ -72,3 +72,13 @@ variable "installation_task_ids" {
   description = "List of installation task IDs"
   type        = any
 }
+
+variable "oidc_issuer_host" {
+  description = "OIDC issuer host for the Kubernetes API server"
+  type        = string
+}
+
+variable "cloudflare_tunnel_token_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Cloudflare tunnel token"
+  type        = string
+}

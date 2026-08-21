@@ -67,3 +67,6 @@ secret_replication_locations = ["europe-west1", "europe-west3"]
 
 # Notification configuration
 notification_topic_prefix = "ovh-server-monitoring"
+
+# Cloudflare Tunnel configuration
+cloudflare_tunnel_token_secret_id = "cloudflare-tunnel-token-kubernetes-oidc"

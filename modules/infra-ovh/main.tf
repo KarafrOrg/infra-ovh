@@ -38,6 +38,8 @@ module "talos_cluster" {
   k8s_api_certificate_authority_secret_id = var.k8s_api_certificate_authority_secret_id
   k8s_api_client_certificate_secret_id    = var.k8s_api_client_certificate_secret_id
   k8s_api_token_secret_id                 = var.k8s_api_token_secret_id
+  oidc_issuer_host                        = var.oidc_issuer_host
+  cloudflare_tunnel_token_secret_id       = var.cloudflare_tunnel_token_secret_id
   installation_task_ids                   = module.ovh_dedicated_server.installation_tasks
 }
 

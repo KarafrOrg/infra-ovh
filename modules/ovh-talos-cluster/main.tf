@@ -8,6 +8,10 @@ data "network_port_wait" "talos_api" {
 
 resource "talos_machine_secrets" "this" {}
 
+data "google_secret_manager_secret_version" "cloudflare_tunnel_token" {
+  secret = var.cloudflare_tunnel_token_secret_id
+}
+
 data "talos_machine_configuration" "control_plane" {
   cluster_name     = var.cluster_name
   machine_type     = "controlplane"
@@ -20,11 +24,22 @@ data "talos_machine_configuration" "control_plane" {
         apiServer = {
           extraArgs = {
             "anonymous-auth"           = "true"
-            "service-account-issuer"   = "https://oidc.k8s.karafra.net"
-            "service-account-jwks-uri" = "https://oidc.k8s.karafra.net/openid/v1/jwks"
+            "service-account-issuer"   = "https://${var.oidc_issuer_host}/"
+            "service-account-jwks-uri" = "https://${var.oidc_issuer_host}/openid/v1/jwks"
           }
         }
       }
+    }),
+    yamlencode({
+      apiVersion = "v1alpha1"
+      kind       = "ExtensionServiceConfig"
+      name       = "cloudflared"
+
+      environment = [
+        "TUNNEL_TOKEN=${data.google_secret_manager_secret_version.cloudflare_tunnel_token.secret_data}",
+        "TUNNEL_METRICS=localhost:2000",
+        "TUNNEL_EDGE_IP_VERSION=auto",
+      ]
     })
   ]
 }
