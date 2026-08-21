@@ -10,4 +10,6 @@ module "infra_ovh" {
   secret_replication_automatic = var.secret_replication_automatic
   secret_replication_locations = var.secret_replication_locations
   ssh_keys                     = var.ssh_keys
+  cluster_name                 = var.cluster_name
+  cluster_endpoint             = var.cluster_endpoint
 }

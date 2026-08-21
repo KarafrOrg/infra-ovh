@@ -8,6 +8,14 @@ terraform {
       source  = "hashicorp/google"
       version = "7.26.0"
     }
+    talos = {
+      source  = "siderolabs/talos"
+      version = "0.11.0"
+    }
+    network = {
+      source  = "xdevs23/network"
+      version = "0.0.1-beta.2"
+    }
   }
   backend "remote" {
     hostname     = "app.terraform.io"

@@ -1,3 +1,17 @@
+locals {
+  # Extract IPs from server labels (stored as dash-separated, e.g. "198-27-70-67" → "198.27.70.67")
+  control_plane_ips = [
+    for k, v in var.dedicated_servers :
+    replace(v.labels["ip"], "-", ".")
+    if try(v.labels["role"], "") == "server"
+  ]
+  worker_ips = [
+    for k, v in var.dedicated_servers :
+    replace(v.labels["ip"], "-", ".")
+    if try(v.labels["role"], "") == "agent"
+  ]
+}
+
 module "ovh_dedicated_server" {
   source = "../ovh-dedicated-server"
 
@@ -8,3 +22,13 @@ module "ovh_dedicated_server" {
   secret_replication_locations = var.secret_replication_locations
   ssh_keys                     = var.ssh_keys
 }
+
+module "talos_cluster" {
+  source = "../ovh-talos-cluster"
+
+  control_plane_ips = local.control_plane_ips
+  worker_ips        = local.worker_ips
+  cluster_name      = var.cluster_name
+  cluster_endpoint  = var.cluster_endpoint
+}
+

@@ -1,3 +1,15 @@
+variable "cluster_name" {
+  description = "Name of the Talos cluster"
+  type        = string
+  default     = "karafra-net"
+}
+
+variable "cluster_endpoint" {
+  description = "Kubernetes API server endpoint. Defaults to the first control plane IP from server labels."
+  type        = string
+  default     = null
+}
+
 variable "ovh_credentials_secret_names" {
   description = "Names of GCP secrets containing OVH API credentials"
   type = object({
