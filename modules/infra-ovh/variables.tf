@@ -3,6 +3,13 @@ variable "kubeconfig_secret_id" {
   type        = string
   default     = "talos-kubeconfig"
 }
+
+variable "talosconfig_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Talos client configuration"
+  type        = string
+  default     = "talos-client-config"
+}
+
 variable "cluster_name" {
   description = "Name of the Talos cluster"
   type        = string

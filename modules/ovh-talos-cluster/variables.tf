@@ -26,6 +26,12 @@ variable "kubeconfig_secret_id" {
   default     = null
 }
 
+variable "talosconfig_secret_id" {
+  description = "GCP Secret Manager secret ID for storing the Talos client configuration"
+  type        = string
+  default     = null
+}
+
 variable "secret_replication_automatic" {
   description = "Whether to use automatic replication for the kubeconfig secret"
   type        = bool
@@ -40,5 +46,5 @@ variable "secret_replication_locations" {
 
 variable "installation_task_ids" {
   description = "List of installation task IDs"
-  type = any
+  type        = any
 }
