@@ -1,7 +1,0 @@
----
-- name: Restart cloudflared tunnel service
-  ansible.builtin.systemd:
-    name: "{{ _cloudflare_service_name }}"
-    state: restarted
-    enabled: true
-    daemon_reload: true
