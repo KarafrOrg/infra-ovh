@@ -23,7 +23,6 @@ echo "Using terraform version $(terraform version)"
 
 cd "live/${ENVIRONMENT}"
 terraform init
-
 """
 
 [tasks.plan]
