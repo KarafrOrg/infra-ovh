@@ -1,5 +1,4 @@
 locals {
-  # Extract IPs from server labels (stored as dash-separated, e.g. "198-27-70-67" → "198.27.70.67")
   control_plane_ips = [
     for k, v in var.dedicated_servers :
     replace(v.labels["ip"], "-", ".")
