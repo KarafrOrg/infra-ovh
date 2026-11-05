@@ -148,3 +148,9 @@ variable "oidc_issuer_host" {
   description = "OIDC issuer host for the Kubernetes API server"
   type        = string
 }
+
+variable "enable_edge_firewall" {
+  description = "Whether to enable the OVH edge firewall restricting nodes to talk only to each other"
+  type        = bool
+  default     = false
+}

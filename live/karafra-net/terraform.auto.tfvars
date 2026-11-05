@@ -73,3 +73,5 @@ cloudflare_tunnel_token_secret_id = "cloudflare-tunnel-token-kubernetes-oidc"
 
 # OIDC configuration
 oidc_issuer_host                  = "oidc.k8s.karafra.net"
+
+enable_edge_firewall = false

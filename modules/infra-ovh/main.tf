@@ -42,3 +42,12 @@ module "talos_cluster" {
   installation_task_ids                   = module.ovh_dedicated_server.installation_tasks
 }
 
+
+module "edge_firewall" {
+  source = "../ovh-edge-firewall"
+  count  = var.enable_edge_firewall ? 1 : 0
+
+  node_ips = concat(local.control_plane_ips, local.worker_ips)
+
+  depends_on = [module.talos_cluster]
+}

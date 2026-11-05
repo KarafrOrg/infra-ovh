@@ -47,10 +47,20 @@ terraform validate
 """
 
 [tasks.unlock-state]
-description = "Unlock Terraform state"
+description = "Unlock the HCP Terraform workspace state of ${ENVIRONMENT}"
 run = """
 cd "live/${ENVIRONMENT}"
-terraform force-unlock -force-lock=true
+HOST=$(sed -n 's/.*hostname *= *"\\(.*\\)".*/\\1/p' version.tf)
+ORG=$(sed -n 's/.*organization *= *"\\(.*\\)".*/\\1/p' version.tf)
+WORKSPACE=$(sed -n 's/.*name *= *"\\(.*\\)".*/\\1/p' version.tf | tail -1)
+TOKEN="${TF_TOKEN:-$(jq -r --arg h "$HOST" '.credentials[$h].token' ~/.terraform.d/credentials.tfrc.json)}"
+
+WORKSPACE_ID=$(curl -fsS -H "Authorization: Bearer ${TOKEN}" \\
+  "https://${HOST}/api/v2/organizations/${ORG}/workspaces/${WORKSPACE}" | jq -r .data.id)
+
+curl -fsS -X POST -H "Authorization: Bearer ${TOKEN}" -H "Content-Type: application/vnd.api+json" \\
+  "https://${HOST}/api/v2/workspaces/${WORKSPACE_ID}/actions/force-unlock" >/dev/null
+echo "Unlocked workspace ${WORKSPACE} (${WORKSPACE_ID})"
 """
 
 [tasks.destroy]

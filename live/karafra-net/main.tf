@@ -15,4 +15,5 @@ module "infra_ovh" {
   kubeconfig_secret_id              = var.kubeconfig_secret_id
   oidc_issuer_host                  = var.oidc_issuer_host
   cloudflare_tunnel_token_secret_id = var.cloudflare_tunnel_token_secret_id
+  enable_edge_firewall              = var.enable_edge_firewall
 }
