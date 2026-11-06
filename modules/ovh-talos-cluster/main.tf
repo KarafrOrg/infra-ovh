@@ -40,6 +40,18 @@ data "talos_machine_configuration" "control_plane" {
         "TUNNEL_METRICS=localhost:2000",
         "TUNNEL_EDGE_IP_VERSION=auto",
       ]
+    }),
+    yamlencode({
+      machine = {
+        logging = {
+          destinations = [
+            {
+              endpoint = "tcp://otelcol.internal.karafra.net:5170/"
+              format   = "json_lines"
+            }
+          ]
+        }
+      }
     })
   ]
 }
@@ -49,6 +61,21 @@ data "talos_machine_configuration" "worker" {
   machine_type     = "worker"
   cluster_endpoint = "https://${local.cluster_endpoint}:6443"
   machine_secrets  = talos_machine_secrets.this.machine_secrets
+
+  config_patches = [
+    yamlencode({
+      machine = {
+        logging = {
+          destinations = [
+            {
+              endpoint = "tcp://talos-logs.kubernetes.karafra.net:5170/"
+              format   = "json_lines"
+            }
+          ]
+        }
+      }
+    })
+  ]
 }
 
 resource "terraform_data" "installation_task" {
