@@ -43,6 +43,9 @@ data "talos_machine_configuration" "control_plane" {
     }),
     yamlencode({
       machine = {
+        sysctls = {
+          "kernel.kptr_restrict" = "0"
+        }
         logging = {
           destinations = [
             {
@@ -65,6 +68,9 @@ data "talos_machine_configuration" "worker" {
   config_patches = [
     yamlencode({
       machine = {
+        sysctls = {
+          "kernel.kptr_restrict" = "0"
+        }
         logging = {
           destinations = [
             {
@@ -336,10 +342,6 @@ resource "google_secret_manager_secret_version" "k8s_api_certificate_authority" 
   is_secret_data_base64 = false
   deletion_policy       = "ABANDON"
 }
-
-# -----------------------------------------------------------------------------
-# Kubernetes API client certificate
-# -----------------------------------------------------------------------------
 
 resource "google_secret_manager_secret" "k8s_api_client_certificate" {
   count     = var.k8s_api_client_certificate_secret_id != null ? 1 : 0
